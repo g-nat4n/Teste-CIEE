@@ -65,28 +65,22 @@ export function CandidateDetailPage() {
       {error && <Alert type="error" message={error} />}
 
       {!loading && candidate && (
-        <div className="panel detail-grid">
-          <DetailItem label="Nome completo" value={candidate.nomeCompleto} />
-          <DetailItem label="E-mail" value={candidate.email} />
-          <DetailItem label="Telefone" value={candidate.telefone || '—'} />
-          <DetailItem label="Área de interesse" value={candidate.areaInteresse || '—'} />
-          <DetailItem label="Data de cadastro" value={formatDate(candidate.dataCadastro)} />
-          <div className="detail-item detail-item-full">
-            <span className="detail-label">Resumo profissional</span>
-            <p className="detail-value">{candidate.resumoProfissional || '—'}</p>
+        <div className="panel detail-panel">
+          <div className="detail-meta">
+            <DetailItem label="Nome completo" value={candidate.nomeCompleto} />
+            <DetailItem label="E-mail" value={candidate.email} />
+            <DetailItem label="Telefone" value={candidate.telefone || '—'} />
+            <DetailItem label="Área de interesse" value={candidate.areaInteresse || '—'} />
+            <DetailItem label="Data de cadastro" value={formatDate(candidate.dataCadastro)} />
           </div>
-          <div className="detail-item detail-item-full">
-            <span className="detail-label">Formação acadêmica</span>
-            <p className="detail-value">{candidate.formacaoAcademica || '—'}</p>
-          </div>
-          <div className="detail-item detail-item-full">
-            <span className="detail-label">Cursos</span>
-            <p className="detail-value">{candidate.cursos || '—'}</p>
-          </div>
-          <div className="detail-item detail-item-full">
-            <span className="detail-label">Experiências profissionais</span>
-            <p className="detail-value">{candidate.experienciasProfissionais || '—'}</p>
-          </div>
+
+          <DetailSection title="Resumo profissional" value={candidate.resumoProfissional} />
+          <DetailSection title="Formação acadêmica" value={candidate.formacaoAcademica} />
+          <DetailSection title="Cursos" value={candidate.cursos} />
+          <DetailSection
+            title="Experiências profissionais"
+            value={candidate.experienciasProfissionais}
+          />
         </div>
       )}
     </section>
@@ -99,5 +93,14 @@ function DetailItem({ label, value }: { label: string; value: string }) {
       <span className="detail-label">{label}</span>
       <p className="detail-value">{value}</p>
     </div>
+  );
+}
+
+function DetailSection({ title, value }: { title: string; value?: string | null }) {
+  return (
+    <section className="detail-section">
+      <h2 className="detail-section-title">{title}</h2>
+      <p className="detail-section-body">{value?.trim() || '—'}</p>
+    </section>
   );
 }

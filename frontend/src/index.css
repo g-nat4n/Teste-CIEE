@@ -376,7 +376,25 @@ textarea {
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1.25rem;
+  gap: 0.75rem 1.25rem;
+}
+
+.detail-panel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.15rem 1.25rem;
+}
+
+.detail-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-item {
+  min-width: 0;
 }
 
 .detail-item-full {
@@ -386,16 +404,49 @@ textarea {
 .detail-label {
   display: block;
   color: var(--ciee-blue);
-  font-size: 0.85rem;
-  margin-bottom: 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
 }
 
 .detail-value {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 0.98rem;
+  line-height: 1.35;
   white-space: pre-wrap;
+}
+
+.detail-section {
+  padding: 0.65rem 0 0.15rem;
+  border-top: 1px solid var(--border);
+}
+
+.detail-section:first-of-type {
+  border-top: none;
+}
+
+.detail-section-title {
+  margin: 0 0 0.35rem;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  line-height: 1.25;
+  color: #ffffff;
+  background: linear-gradient(90deg, var(--ciee-blue) 0%, #0059a8 100%);
+  border-radius: 6px;
+  letter-spacing: 0.02em;
+}
+
+.detail-section-body {
+  margin: 0;
+  padding: 0.15rem 0.15rem 0.25rem;
+  font-size: 0.95rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
+  color: var(--text);
 }
 
 @media (max-width: 768px) {
@@ -417,7 +468,8 @@ textarea {
   }
 
   .form-grid,
-  .detail-grid {
+  .detail-grid,
+  .detail-meta {
     grid-template-columns: 1fr;
   }
 
