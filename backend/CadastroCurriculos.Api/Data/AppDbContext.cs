@@ -22,6 +22,9 @@ public class AppDbContext : DbContext
             entity.Property(c => c.Telefone).HasMaxLength(30);
             entity.Property(c => c.AreaInteresse).HasMaxLength(150);
             entity.Property(c => c.ResumoProfissional).HasMaxLength(2000);
+            entity.Property(c => c.FormacaoAcademica).HasMaxLength(2000);
+            entity.Property(c => c.Cursos).HasMaxLength(2000);
+            entity.Property(c => c.ExperienciasProfissionais).HasMaxLength(4000);
             entity.Property(c => c.DataCadastro).IsRequired();
         });
     }

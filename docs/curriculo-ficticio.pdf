@@ -9,21 +9,32 @@ endobj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
 endobj
 4 0 obj
-<< /Length 555 >>
+<< /Length 1135 >>
 stream
 BT
-/F1 12 Tf
-1 0 0 1 50 750 Tm (CURRICULO) Tj
-1 0 0 1 50 732 Tm () Tj
-1 0 0 1 50 714 Tm (Nome: Mariana Oliveira Santos) Tj
-1 0 0 1 50 696 Tm (E-mail: mariana.santos@email.com) Tj
-1 0 0 1 50 678 Tm (Telefone: \\(41\\) 99999-8888) Tj
-1 0 0 1 50 660 Tm () Tj
-1 0 0 1 50 642 Tm (Area: Desenvolvimento de Software) Tj
-1 0 0 1 50 624 Tm () Tj
-1 0 0 1 50 606 Tm (Resumo profissional:) Tj
-1 0 0 1 50 588 Tm (Desenvolvedora com experiencia em React, TypeScript e APIs REST.) Tj
-1 0 0 1 50 570 Tm (Participou de projetos de cadastro e consulta de candidatos.) Tj
+/F1 11 Tf
+1 0 0 1 50 760 Tm (CURRICULO) Tj
+1 0 0 1 50 744 Tm () Tj
+1 0 0 1 50 728 Tm (Nome: Mariana Oliveira Santos) Tj
+1 0 0 1 50 712 Tm (E-mail: mariana.santos@email.com) Tj
+1 0 0 1 50 696 Tm (Telefone: \\(41\\) 99999-8888) Tj
+1 0 0 1 50 680 Tm () Tj
+1 0 0 1 50 664 Tm (Area: Desenvolvimento de Software) Tj
+1 0 0 1 50 648 Tm () Tj
+1 0 0 1 50 632 Tm (Resumo profissional:) Tj
+1 0 0 1 50 616 Tm (Desenvolvedora com experiencia em React, TypeScript e APIs REST.) Tj
+1 0 0 1 50 600 Tm () Tj
+1 0 0 1 50 584 Tm (Formacao academica:) Tj
+1 0 0 1 50 568 Tm (Bacharelado em Ciencia da Computacao - Universidade Federal do Parana \\(2018-2022\\)) Tj
+1 0 0 1 50 552 Tm () Tj
+1 0 0 1 50 536 Tm (Cursos:) Tj
+1 0 0 1 50 520 Tm (React Avancado - Alura \\(2023\\)) Tj
+1 0 0 1 50 504 Tm (SQL Server e Entity Framework - Udemy \\(2022\\)) Tj
+1 0 0 1 50 488 Tm (Certificacao AWS Cloud Practitioner \\(2024\\)) Tj
+1 0 0 1 50 472 Tm () Tj
+1 0 0 1 50 456 Tm (Experiencia profissional:) Tj
+1 0 0 1 50 440 Tm (Desenvolvedora Frontend - Tech Solutions \\(2022-2024\\)) Tj
+1 0 0 1 50 424 Tm (Estagiaria de Desenvolvimento - SoftHouse \\(2021-2022\\)) Tj
 ET
 endstream
 endobj
@@ -37,9 +48,9 @@ xref
 0000000058 00000 n 
 0000000115 00000 n 
 0000000241 00000 n 
-0000000847 00000 n 
+0000001428 00000 n 
 trailer
 << /Size 6 /Root 1 0 R >>
 startxref
-917
+1498
 %%EOF

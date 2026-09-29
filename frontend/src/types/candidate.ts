@@ -5,6 +5,9 @@ export interface Candidate {
   telefone?: string | null;
   areaInteresse?: string | null;
   resumoProfissional?: string | null;
+  formacaoAcademica?: string | null;
+  cursos?: string | null;
+  experienciasProfissionais?: string | null;
   dataCadastro: string;
 }
 
@@ -14,6 +17,9 @@ export interface CreateCandidateRequest {
   telefone?: string;
   areaInteresse?: string;
   resumoProfissional?: string;
+  formacaoAcademica?: string;
+  cursos?: string;
+  experienciasProfissionais?: string;
 }
 
 export interface PdfExtractionResult {
@@ -22,6 +28,9 @@ export interface PdfExtractionResult {
   nomeCompleto: string | null;
   email: string | null;
   telefone: string | null;
+  formacaoAcademica: string | null;
+  cursos: string | null;
+  experienciasProfissionais: string | null;
 }
 
 export interface ApiError {

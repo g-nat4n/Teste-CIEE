@@ -32,6 +32,36 @@ public class PdfExtractionServiceTests
     }
 
     [Fact]
+    public async Task ExtractFromPdfAsync_ComSecoes_DeveExtrairFormacaoCursosEExperiencia()
+    {
+        var content = """
+            Nome: Mariana Oliveira Santos
+            E-mail: mariana.santos@email.com
+            Telefone: (41) 99999-8888
+
+            Formacao academica:
+            Bacharelado em Ciencia da Computacao - UFPR (2018-2022)
+
+            Cursos:
+            React Avancado - Alura (2023)
+            SQL Server - Udemy (2022)
+
+            Experiencia profissional:
+            Desenvolvedora Frontend - Tech Solutions (2022-2024)
+            Estagiaria de Desenvolvimento - SoftHouse (2021-2022)
+            """;
+
+        var file = CreatePdfFormFile(content, "curriculo-secoes.pdf");
+
+        var result = await _service.ExtractFromPdfAsync(file);
+
+        Assert.True(result.Success);
+        Assert.Contains("Ciencia da Computacao", result.FormacaoAcademica);
+        Assert.Contains("React Avancado", result.Cursos);
+        Assert.Contains("Tech Solutions", result.ExperienciasProfissionais);
+    }
+
+    [Fact]
     public async Task ExtractFromPdfAsync_ArquivoQueNaoEPdf_DeveRetornarErro()
     {
         var bytes = Encoding.UTF8.GetBytes("isto nao e um pdf");

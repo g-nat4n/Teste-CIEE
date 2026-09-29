@@ -75,6 +75,18 @@ export function CandidateDetailPage() {
             <span className="detail-label">Resumo profissional</span>
             <p className="detail-value">{candidate.resumoProfissional || '—'}</p>
           </div>
+          <div className="detail-item detail-item-full">
+            <span className="detail-label">Formação acadêmica</span>
+            <p className="detail-value">{candidate.formacaoAcademica || '—'}</p>
+          </div>
+          <div className="detail-item detail-item-full">
+            <span className="detail-label">Cursos</span>
+            <p className="detail-value">{candidate.cursos || '—'}</p>
+          </div>
+          <div className="detail-item detail-item-full">
+            <span className="detail-label">Experiências profissionais</span>
+            <p className="detail-value">{candidate.experienciasProfissionais || '—'}</p>
+          </div>
         </div>
       )}
     </section>

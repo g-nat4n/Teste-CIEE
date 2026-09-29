@@ -13,6 +13,9 @@ const EMPTY_FORM: CreateCandidateRequest = {
   telefone: '',
   areaInteresse: '',
   resumoProfissional: '',
+  formacaoAcademica: '',
+  cursos: '',
+  experienciasProfissionais: '',
 };
 
 export function CandidateFormPage() {
@@ -53,6 +56,9 @@ export function CandidateFormPage() {
         telefone: form.telefone?.trim() || undefined,
         areaInteresse: form.areaInteresse?.trim() || undefined,
         resumoProfissional: form.resumoProfissional?.trim() || undefined,
+        formacaoAcademica: form.formacaoAcademica?.trim() || undefined,
+        cursos: form.cursos?.trim() || undefined,
+        experienciasProfissionais: form.experienciasProfissionais?.trim() || undefined,
       });
 
       setMessage({ type: 'success', text: result.message || 'Candidato cadastrado com sucesso!' });
@@ -108,6 +114,10 @@ export function CandidateFormPage() {
           nomeCompleto: result.nomeCompleto ?? prev.nomeCompleto,
           email: result.email ?? prev.email,
           telefone: result.telefone ?? prev.telefone,
+          formacaoAcademica: result.formacaoAcademica ?? prev.formacaoAcademica,
+          cursos: result.cursos ?? prev.cursos,
+          experienciasProfissionais:
+            result.experienciasProfissionais ?? prev.experienciasProfissionais,
         }));
 
         const incomplete = !result.nomeCompleto || !result.email || !result.telefone;
@@ -218,10 +228,40 @@ export function CandidateFormPage() {
           <label className="field">
             <span>Resumo profissional</span>
             <textarea
-              rows={5}
+              rows={4}
               value={form.resumoProfissional}
               onChange={(event) => updateField('resumoProfissional', event.target.value)}
-              placeholder="Breve descrição da experiência do candidato"
+              placeholder="Breve descrição do perfil do candidato"
+            />
+          </label>
+
+          <label className="field">
+            <span>Formação acadêmica</span>
+            <textarea
+              rows={3}
+              value={form.formacaoAcademica}
+              onChange={(event) => updateField('formacaoAcademica', event.target.value)}
+              placeholder="Ex.: Bacharelado em Ciência da Computação - Universidade XYZ (2020)"
+            />
+          </label>
+
+          <label className="field">
+            <span>Cursos</span>
+            <textarea
+              rows={3}
+              value={form.cursos}
+              onChange={(event) => updateField('cursos', event.target.value)}
+              placeholder="Ex.: React Avançado, SQL Server, Certificação AWS"
+            />
+          </label>
+
+          <label className="field">
+            <span>Experiências profissionais</span>
+            <textarea
+              rows={5}
+              value={form.experienciasProfissionais}
+              onChange={(event) => updateField('experienciasProfissionais', event.target.value)}
+              placeholder="Ex.: Desenvolvedora Frontend na Empresa ABC (2021-2024)"
             />
           </label>
 

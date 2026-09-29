@@ -31,6 +31,9 @@ public class CandidateService : ICandidateService
             Telefone = NormalizeOptional(request.Telefone),
             AreaInteresse = NormalizeOptional(request.AreaInteresse),
             ResumoProfissional = NormalizeOptional(request.ResumoProfissional),
+            FormacaoAcademica = NormalizeOptional(request.FormacaoAcademica),
+            Cursos = NormalizeOptional(request.Cursos),
+            ExperienciasProfissionais = NormalizeOptional(request.ExperienciasProfissionais),
             DataCadastro = DateTime.UtcNow
         };
 
@@ -74,6 +77,9 @@ public class CandidateService : ICandidateService
             Telefone = candidate.Telefone,
             AreaInteresse = candidate.AreaInteresse,
             ResumoProfissional = candidate.ResumoProfissional,
+            FormacaoAcademica = candidate.FormacaoAcademica,
+            Cursos = candidate.Cursos,
+            ExperienciasProfissionais = candidate.ExperienciasProfissionais,
             DataCadastro = candidate.DataCadastro
         };
     }
