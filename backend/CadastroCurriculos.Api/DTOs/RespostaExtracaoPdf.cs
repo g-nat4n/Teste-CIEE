@@ -1,9 +1,9 @@
 namespace CadastroCurriculos.Api.DTOs;
 
-public class PdfExtractionResponse
+public class RespostaExtracaoPdf
 {
-    public bool Success { get; set; }
-    public string Message { get; set; } = string.Empty;
+    public bool Sucesso { get; set; }
+    public string Mensagem { get; set; } = string.Empty;
     public string? NomeCompleto { get; set; }
     public string? Email { get; set; }
     public string? Telefone { get; set; }

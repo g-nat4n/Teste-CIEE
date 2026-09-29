@@ -1,4 +1,4 @@
-export interface Candidate {
+export interface Candidato {
   id: string;
   nomeCompleto: string;
   email: string;
@@ -10,7 +10,7 @@ export interface Candidate {
   dataCadastro: string;
 }
 
-export interface CreateCandidateRequest {
+export interface RequisicaoCriarCandidato {
   nomeCompleto: string;
   email: string;
   telefone?: string;
@@ -20,9 +20,9 @@ export interface CreateCandidateRequest {
   experienciasProfissionais?: string;
 }
 
-export interface PdfExtractionResult {
-  success: boolean;
-  message: string;
+export interface ResultadoExtracaoPdf {
+  sucesso: boolean;
+  mensagem: string;
   nomeCompleto: string | null;
   email: string | null;
   telefone: string | null;
@@ -30,7 +30,9 @@ export interface PdfExtractionResult {
   experienciasProfissionais: string | null;
 }
 
-export interface ApiError {
-  message: string;
+export interface ErroApi {
+  mensagem?: string;
+  message?: string;
+  erros?: string[];
   errors?: string[];
 }

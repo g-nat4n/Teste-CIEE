@@ -1,76 +1,77 @@
 import type {
-  ApiError,
-  Candidate,
-  CreateCandidateRequest,
-  PdfExtractionResult,
-} from '../types/candidate';
+  Candidato,
+  ErroApi,
+  RequisicaoCriarCandidato,
+  ResultadoExtracaoPdf,
+} from '../types/candidato';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5052/api';
+const URL_BASE_API = import.meta.env.VITE_API_URL ?? 'http://localhost:5052/api';
 
-async function parseError(response: Response): Promise<string> {
+async function interpretarErro(resposta: Response): Promise<string> {
   try {
-    const data = (await response.json()) as ApiError;
-    if (data.errors && data.errors.length > 0) {
-      return data.errors.join(' ');
+    const dados = (await resposta.json()) as ErroApi;
+    const erros = dados.erros ?? dados.errors;
+    if (erros && erros.length > 0) {
+      return erros.join(' ');
     }
-    if (data.message) {
-      return data.message;
+    if (dados.mensagem || dados.message) {
+      return dados.mensagem || dados.message || '';
     }
   } catch {
-    // ignore parse errors
+    // ignora falha ao interpretar o JSON de erro
   }
 
   return 'Não foi possível realizar a operação. Tente novamente.';
 }
 
-export async function listCandidates(): Promise<Candidate[]> {
-  const response = await fetch(`${API_BASE_URL}/candidates`);
+export async function listarCandidatos(): Promise<Candidato[]> {
+  const resposta = await fetch(`${URL_BASE_API}/candidatos`);
 
-  if (!response.ok) {
-    throw new Error(await parseError(response));
+  if (!resposta.ok) {
+    throw new Error(await interpretarErro(resposta));
   }
 
-  return response.json();
+  return resposta.json();
 }
 
-export async function getCandidate(id: string): Promise<Candidate> {
-  const response = await fetch(`${API_BASE_URL}/candidates/${id}`);
+export async function obterCandidato(id: string): Promise<Candidato> {
+  const resposta = await fetch(`${URL_BASE_API}/candidatos/${id}`);
 
-  if (!response.ok) {
-    throw new Error(await parseError(response));
+  if (!resposta.ok) {
+    throw new Error(await interpretarErro(resposta));
   }
 
-  return response.json();
+  return resposta.json();
 }
 
-export async function createCandidate(
-  payload: CreateCandidateRequest,
-): Promise<{ message: string; candidate: Candidate }> {
-  const response = await fetch(`${API_BASE_URL}/candidates`, {
+export async function criarCandidato(
+  dados: RequisicaoCriarCandidato,
+): Promise<{ mensagem: string; candidato: Candidato }> {
+  const resposta = await fetch(`${URL_BASE_API}/candidatos`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(dados),
   });
 
-  if (!response.ok) {
-    throw new Error(await parseError(response));
+  if (!resposta.ok) {
+    throw new Error(await interpretarErro(resposta));
   }
 
-  return response.json();
+  return resposta.json();
 }
 
-export async function extractPdf(file: File): Promise<PdfExtractionResult> {
-  const formData = new FormData();
-  formData.append('file', file);
+export async function extrairPdf(arquivo: File): Promise<ResultadoExtracaoPdf> {
+  const formulario = new FormData();
+  formulario.append('file', arquivo);
 
-  const response = await fetch(`${API_BASE_URL}/candidates/extract-pdf`, {
+  const resposta = await fetch(`${URL_BASE_API}/candidatos/extrair-pdf`, {
     method: 'POST',
-    body: formData,
+    body: formulario,
   });
 
-  if (!response.ok) {
-    throw new Error(await parseError(response));
+  if (!resposta.ok) {
+    throw new Error(await interpretarErro(resposta));
   }
 
-  return response.json();
+  return resposta.json();
 }

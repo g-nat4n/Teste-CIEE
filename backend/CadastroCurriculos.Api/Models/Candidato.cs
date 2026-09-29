@@ -1,6 +1,6 @@
-namespace CadastroCurriculos.Api.DTOs;
+namespace CadastroCurriculos.Api.Models;
 
-public class CandidateResponse
+public class Candidato
 {
     public Guid Id { get; set; }
     public string NomeCompleto { get; set; } = string.Empty;

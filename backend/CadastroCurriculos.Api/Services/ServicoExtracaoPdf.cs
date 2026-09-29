@@ -5,29 +5,29 @@ using UglyToad.PdfPig;
 
 namespace CadastroCurriculos.Api.Services;
 
-public interface IPdfExtractionService
+public interface IServicoExtracaoPdf
 {
-    Task<PdfExtractionResponse> ExtractFromPdfAsync(IFormFile file);
+    Task<RespostaExtracaoPdf> ExtrairDoPdfAsync(IFormFile file);
 }
 
 /// <summary>
 /// Extrai texto de PDFs com UglyToad.PdfPig e tenta identificar nome, e-mail, telefone,
-/// formação acadêmica, cursos e experiências profissionais com regras simples.
+/// formação acadêmica e experiências profissionais com regras simples.
 /// </summary>
-public class PdfExtractionService : IPdfExtractionService
+public class ServicoExtracaoPdf : IServicoExtracaoPdf
 {
-    public const long MaxFileSizeBytes = 5 * 1024 * 1024; // 5 MB
+    public const long TamanhoMaximoBytes = 5 * 1024 * 1024; // 5 MB
 
-    private static readonly Regex EmailRegex = new(
+    private static readonly Regex RegexEmail = new(
         @"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,6}(?![a-zA-Z0-9])",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     // Aceita: (41) 99999-9999 | 41 99999-9999 | 41999999999 | (41) 9999-9999
-    private static readonly Regex PhoneRegex = new(
+    private static readonly Regex RegexTelefone = new(
         @"(?:\+?55\s?)?(?:\(?\d{2}\)?[\s\-]?)?(?:9?\d{4}[\s\-]?\d{4})",
         RegexOptions.Compiled);
 
-    private static readonly HashSet<string> NameStopWords = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> PalavrasIgnoradasNome = new(StringComparer.OrdinalIgnoreCase)
     {
         "curriculo", "currículo", "curriculum", "vitae", "cv",
         "nome", "email", "e-mail", "telefone", "celular", "contato",
@@ -38,7 +38,7 @@ public class PdfExtractionService : IPdfExtractionService
     };
 
     // Cabeçalhos conhecidos usados para delimitar o fim de uma seção
-    private static readonly string[] SectionHeaders =
+    private static readonly string[] CabecalhosSecao =
     [
         "formacao academica",
         "formação acadêmica",
@@ -98,13 +98,13 @@ public class PdfExtractionService : IPdfExtractionService
     ];
 
     // Preferir títulos longos para evitar capturar linhas erradas
-    private static readonly string[] FormacaoHeaders =
+    private static readonly string[] CabecalhosFormacao =
     [
         "formacao academica", "formação acadêmica", "formação academica",
         "escolaridade", "educacao", "educação", "formacao", "formação"
     ];
 
-    private static readonly string[] ExperienciaHeaders =
+    private static readonly string[] CabecalhosExperiencia =
     [
         "experiencia profissional", "experiência profissional",
         "experiencias profissionais", "experiências profissionais",
@@ -112,15 +112,15 @@ public class PdfExtractionService : IPdfExtractionService
         "experiencia", "experiência"
     ];
 
-    public async Task<PdfExtractionResponse> ExtractFromPdfAsync(IFormFile file)
+    public async Task<RespostaExtracaoPdf> ExtrairDoPdfAsync(IFormFile file)
     {
-        var validationError = ValidateFile(file);
+        var validationError = ValidarArquivo(file);
         if (validationError is not null)
         {
-            return new PdfExtractionResponse
+            return new RespostaExtracaoPdf
             {
-                Success = false,
-                Message = validationError
+                Sucesso = false,
+                Mensagem = validationError
             };
         }
 
@@ -130,24 +130,24 @@ public class PdfExtractionService : IPdfExtractionService
             await file.CopyToAsync(memoryStream);
             memoryStream.Position = 0;
 
-            if (!IsPdfContent(memoryStream))
+            if (!EhConteudoPdf(memoryStream))
             {
-                return new PdfExtractionResponse
+                return new RespostaExtracaoPdf
                 {
-                    Success = false,
-                    Message = "O arquivo deve estar no formato PDF."
+                    Sucesso = false,
+                    Mensagem = "O arquivo deve estar no formato PDF."
                 };
             }
 
             memoryStream.Position = 0;
-            var text = ExtractText(memoryStream);
+            var text = ExtrairTexto(memoryStream);
 
             if (string.IsNullOrWhiteSpace(text))
             {
-                return new PdfExtractionResponse
+                return new RespostaExtracaoPdf
                 {
-                    Success = false,
-                    Message = "Não foi possível extrair informações deste currículo. Preencha os dados manualmente.",
+                    Sucesso = false,
+                    Mensagem = "Não foi possível extrair informações deste currículo. Preencha os dados manualmente.",
                     NomeCompleto = null,
                     Email = null,
                     Telefone = null,
@@ -157,11 +157,11 @@ public class PdfExtractionService : IPdfExtractionService
                 };
             }
 
-            var email = ExtractEmail(text);
-            var telefone = ExtractPhone(text);
-            var nome = ExtractName(text);
-            var formacao = ExtractSection(text, FormacaoHeaders);
-            var experiencias = ExtractSection(text, ExperienciaHeaders);
+            var email = ExtrairEmail(text);
+            var telefone = ExtrairTelefone(text);
+            var nome = ExtrairNome(text);
+            var formacao = ExtrairSecao(text, CabecalhosFormacao);
+            var experiencias = ExtrairSecao(text, CabecalhosExperiencia);
 
             var foundAny = email is not null
                 || telefone is not null
@@ -169,10 +169,10 @@ public class PdfExtractionService : IPdfExtractionService
                 || formacao is not null
                 || experiencias is not null;
 
-            return new PdfExtractionResponse
+            return new RespostaExtracaoPdf
             {
-                Success = true,
-                Message = foundAny
+                Sucesso = true,
+                Mensagem = foundAny
                     ? "Informações extraídas com sucesso. Confira e complete os dados se necessário."
                     : "Não foi possível extrair todas as informações do currículo. Confira e complete os dados manualmente.",
                 NomeCompleto = nome,
@@ -185,10 +185,10 @@ public class PdfExtractionService : IPdfExtractionService
         }
         catch (Exception)
         {
-            return new PdfExtractionResponse
+            return new RespostaExtracaoPdf
             {
-                Success = false,
-                Message = "Não foi possível extrair informações deste currículo. Preencha os dados manualmente.",
+                Sucesso = false,
+                Mensagem = "Não foi possível extrair informações deste currículo. Preencha os dados manualmente.",
                 NomeCompleto = null,
                 Email = null,
                 Telefone = null,
@@ -199,14 +199,14 @@ public class PdfExtractionService : IPdfExtractionService
         }
     }
 
-    public static string? ValidateFile(IFormFile? file)
+    public static string? ValidarArquivo(IFormFile? file)
     {
         if (file is null || file.Length == 0)
         {
             return "O arquivo não pode estar vazio.";
         }
 
-        if (file.Length > MaxFileSizeBytes)
+        if (file.Length > TamanhoMaximoBytes)
         {
             return "O arquivo deve ter no máximo 5 MB.";
         }
@@ -226,7 +226,7 @@ public class PdfExtractionService : IPdfExtractionService
         return null;
     }
 
-    private static bool IsPdfContent(Stream stream)
+    private static bool EhConteudoPdf(Stream stream)
     {
         Span<byte> header = stackalloc byte[5];
         var read = stream.Read(header);
@@ -237,7 +237,7 @@ public class PdfExtractionService : IPdfExtractionService
                header[3] == (byte)'F';
     }
 
-    private static string ExtractText(Stream stream)
+    private static string ExtrairTexto(Stream stream)
     {
         var builder = new StringBuilder();
 
@@ -290,7 +290,7 @@ public class PdfExtractionService : IPdfExtractionService
     /// Extrai o conteúdo de uma seção do currículo a partir de cabeçalhos conhecidos,
     /// até encontrar o próximo cabeçalho de seção ou o fim do texto.
     /// </summary>
-    private static string? ExtractSection(string text, IReadOnlyList<string> targetHeaders)
+    private static string? ExtrairSecao(string text, IReadOnlyList<string> targetHeaders)
     {
         var lines = text
             .Split(['\r', '\n'], StringSplitOptions.None)
@@ -302,7 +302,7 @@ public class PdfExtractionService : IPdfExtractionService
 
         for (var i = 0; i < lines.Count; i++)
         {
-            if (!TryMatchHeader(lines[i], targetHeaders, out var header))
+            if (!TentarCombinarCabecalho(lines[i], targetHeaders, out var header))
             {
                 continue;
             }
@@ -318,7 +318,7 @@ public class PdfExtractionService : IPdfExtractionService
         }
 
         var content = new List<string>();
-        var firstLine = StripHeaderPrefix(lines[startIndex], targetHeaders);
+        var firstLine = RemoverPrefixoCabecalho(lines[startIndex], targetHeaders);
         if (!string.IsNullOrWhiteSpace(firstLine))
         {
             content.Add(firstLine);
@@ -332,13 +332,13 @@ public class PdfExtractionService : IPdfExtractionService
                 continue;
             }
 
-            if (IsSectionHeader(line))
+            if (EhCabecalhoSecao(line))
             {
                 break;
             }
 
             // Linhas que claramente não pertencem à formação (quando extraindo formação)
-            if (IsFormacaoHeaderSet(targetHeaders) && LooksLikeNonEducationContent(line))
+            if (EhConjuntoCabecalhosFormacao(targetHeaders) && PareceConteudoNaoEducacional(line))
             {
                 break;
             }
@@ -353,21 +353,21 @@ public class PdfExtractionService : IPdfExtractionService
         return string.IsNullOrWhiteSpace(result) ? null : result;
     }
 
-    private static bool IsFormacaoHeaderSet(IReadOnlyList<string> targetHeaders)
+    private static bool EhConjuntoCabecalhosFormacao(IReadOnlyList<string> targetHeaders)
     {
         return targetHeaders.Any(h =>
-            NormalizeHeader(h).Contains("formacao", StringComparison.Ordinal) ||
-            NormalizeHeader(h).Contains("educacao", StringComparison.Ordinal) ||
-            NormalizeHeader(h).Contains("escolaridade", StringComparison.Ordinal));
+            NormalizarCabecalho(h).Contains("formacao", StringComparison.Ordinal) ||
+            NormalizarCabecalho(h).Contains("educacao", StringComparison.Ordinal) ||
+            NormalizarCabecalho(h).Contains("escolaridade", StringComparison.Ordinal));
     }
 
     /// <summary>
     /// Interrompe a formação quando o texto já parece outra seção
     /// (habilidades, stacks, projetos etc.), mesmo sem cabeçalho explícito.
     /// </summary>
-    private static bool LooksLikeNonEducationContent(string line)
+    private static bool PareceConteudoNaoEducacional(string line)
     {
-        var normalized = NormalizeHeader(line);
+        var normalized = NormalizarCabecalho(line);
 
         // Se parece formação acadêmica, mantém
         if (Regex.IsMatch(
@@ -385,9 +385,9 @@ public class PdfExtractionService : IPdfExtractionService
         ];
 
         if (sectionLikeMarkers.Any(marker =>
-                normalized == NormalizeHeader(marker) ||
-                normalized.StartsWith(NormalizeHeader(marker) + ":", StringComparison.Ordinal) ||
-                normalized.StartsWith(NormalizeHeader(marker) + " ", StringComparison.Ordinal)))
+                normalized == NormalizarCabecalho(marker) ||
+                normalized.StartsWith(NormalizarCabecalho(marker) + ":", StringComparison.Ordinal) ||
+                normalized.StartsWith(NormalizarCabecalho(marker) + " ", StringComparison.Ordinal)))
         {
             return true;
         }
@@ -401,18 +401,18 @@ public class PdfExtractionService : IPdfExtractionService
         return false;
     }
 
-    private static bool TryMatchHeader(string line, IReadOnlyList<string> headers, out string matchedHeader)
+    private static bool TentarCombinarCabecalho(string line, IReadOnlyList<string> headers, out string matchedHeader)
     {
         matchedHeader = string.Empty;
-        var normalized = NormalizeHeader(line);
+        var normalized = NormalizarCabecalho(line);
         if (string.IsNullOrWhiteSpace(normalized))
         {
             return false;
         }
 
-        foreach (var header in headers.OrderByDescending(h => NormalizeHeader(h).Length))
+        foreach (var header in headers.OrderByDescending(h => NormalizarCabecalho(h).Length))
         {
-            var normalizedHeader = NormalizeHeader(header);
+            var normalizedHeader = NormalizarCabecalho(header);
             if (normalized == normalizedHeader ||
                 normalized.StartsWith(normalizedHeader + ":", StringComparison.Ordinal) ||
                 normalized.StartsWith(normalizedHeader + " -", StringComparison.Ordinal) ||
@@ -433,7 +433,7 @@ public class PdfExtractionService : IPdfExtractionService
         return false;
     }
 
-    private static string StripHeaderPrefix(string line, IReadOnlyList<string> headers)
+    private static string RemoverPrefixoCabecalho(string line, IReadOnlyList<string> headers)
     {
         var working = line.Trim().TrimEnd(':', '-', '|', '•', '*').Trim();
         foreach (var header in headers.OrderByDescending(h => h.Length))
@@ -447,15 +447,15 @@ public class PdfExtractionService : IPdfExtractionService
         }
 
         // Se a linha inteira é só o título da seção, não há conteúdo nela
-        return TryMatchHeader(working, headers, out _) &&
-               NormalizeHeader(working).Split(' ', StringSplitOptions.RemoveEmptyEntries).Length <= 3
+        return TentarCombinarCabecalho(working, headers, out _) &&
+               NormalizarCabecalho(working).Split(' ', StringSplitOptions.RemoveEmptyEntries).Length <= 3
             ? string.Empty
             : working;
     }
 
-    private static bool IsSectionHeader(string line)
+    private static bool EhCabecalhoSecao(string line)
     {
-        var normalized = NormalizeHeader(line);
+        var normalized = NormalizarCabecalho(line);
         if (string.IsNullOrWhiteSpace(normalized) || normalized.Length > 55)
         {
             return false;
@@ -473,11 +473,11 @@ public class PdfExtractionService : IPdfExtractionService
             return false;
         }
 
-        return SectionHeaders
-            .OrderByDescending(h => NormalizeHeader(h).Length)
+        return CabecalhosSecao
+            .OrderByDescending(h => NormalizarCabecalho(h).Length)
             .Any(header =>
             {
-                var normalizedHeader = NormalizeHeader(header);
+                var normalizedHeader = NormalizarCabecalho(header);
                 return normalized == normalizedHeader ||
                        normalized.StartsWith(normalizedHeader + ":", StringComparison.Ordinal) ||
                        normalized.StartsWith(normalizedHeader + " -", StringComparison.Ordinal) ||
@@ -485,14 +485,14 @@ public class PdfExtractionService : IPdfExtractionService
             });
     }
 
-    private static string NormalizeHeader(string value)
+    private static string NormalizarCabecalho(string value)
     {
         var normalized = value.Trim().TrimEnd(':', '-', '|', '•', '*').Trim();
         normalized = Regex.Replace(normalized, @"\s+", " ");
-        return RemoveDiacritics(normalized).ToLowerInvariant();
+        return RemoverDiacriticos(normalized).ToLowerInvariant();
     }
 
-    private static string RemoveDiacritics(string text)
+    private static string RemoverDiacriticos(string text)
     {
         var normalized = text.Normalize(NormalizationForm.FormD);
         var builder = new StringBuilder();
@@ -508,15 +508,15 @@ public class PdfExtractionService : IPdfExtractionService
         return builder.ToString().Normalize(NormalizationForm.FormC);
     }
 
-    private static string? ExtractEmail(string text)
+    private static string? ExtrairEmail(string text)
     {
-        var match = EmailRegex.Match(text);
+        var match = RegexEmail.Match(text);
         return match.Success ? match.Value.Trim() : null;
     }
 
-    private static string? ExtractPhone(string text)
+    private static string? ExtrairTelefone(string text)
     {
-        var matches = PhoneRegex.Matches(text);
+        var matches = RegexTelefone.Matches(text);
         foreach (Match match in matches)
         {
             var digits = Regex.Replace(match.Value, @"\D", string.Empty);
@@ -530,14 +530,14 @@ public class PdfExtractionService : IPdfExtractionService
             // Telefone BR: 10 ou 11 dígitos (DDD + número)
             if (digits.Length is 10 or 11)
             {
-                return FormatBrazilianPhone(digits);
+                return FormatarTelefoneBrasileiro(digits);
             }
         }
 
         return null;
     }
 
-    private static string FormatBrazilianPhone(string digits)
+    private static string FormatarTelefoneBrasileiro(string digits)
     {
         var ddd = digits[..2];
         if (digits.Length == 11)
@@ -554,7 +554,7 @@ public class PdfExtractionService : IPdfExtractionService
     /// 2. Caso contrário, analisa as primeiras linhas do texto e escolhe a primeira
     ///    que parece um nome próprio (2+ palavras capitalizadas, sem e-mail/telefone/rótulos).
     /// </summary>
-    private static string? ExtractName(string text)
+    private static string? ExtrairNome(string text)
     {
         var lines = text
             .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
@@ -571,8 +571,8 @@ public class PdfExtractionService : IPdfExtractionService
 
             if (labeled.Success)
             {
-                var candidate = CleanNameCandidate(labeled.Groups[1].Value);
-                if (LooksLikeName(candidate))
+                var candidate = LimparCandidatoNome(labeled.Groups[1].Value);
+                if (PareceNome(candidate))
                 {
                     return candidate;
                 }
@@ -581,8 +581,8 @@ public class PdfExtractionService : IPdfExtractionService
 
         foreach (var line in lines.Take(10))
         {
-            var candidate = CleanNameCandidate(line);
-            if (LooksLikeName(candidate))
+            var candidate = LimparCandidatoNome(line);
+            if (PareceNome(candidate))
             {
                 return candidate;
             }
@@ -591,21 +591,21 @@ public class PdfExtractionService : IPdfExtractionService
         return null;
     }
 
-    private static string CleanNameCandidate(string value)
+    private static string LimparCandidatoNome(string value)
     {
         value = Regex.Replace(value, @"\s+", " ").Trim();
         value = value.Trim(':', '-', '|', '•', '*');
         return value.Trim();
     }
 
-    private static bool LooksLikeName(string value)
+    private static bool PareceNome(string value)
     {
         if (string.IsNullOrWhiteSpace(value) || value.Length is < 3 or > 80)
         {
             return false;
         }
 
-        if (value.Contains('@') || EmailRegex.IsMatch(value))
+        if (value.Contains('@') || RegexEmail.IsMatch(value))
         {
             return false;
         }
@@ -621,7 +621,7 @@ public class PdfExtractionService : IPdfExtractionService
             return false;
         }
 
-        if (words.Any(w => NameStopWords.Contains(w)))
+        if (words.Any(w => PalavrasIgnoradasNome.Contains(w)))
         {
             return false;
         }

@@ -1,44 +1,44 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Alert } from '../components/Alert';
-import { listCandidates } from '../services/api';
-import type { Candidate } from '../types/candidate';
-import { formatDate } from '../utils/validation';
+import { Alerta } from '../components/Alerta';
+import { listarCandidatos } from '../services/api';
+import type { Candidato } from '../types/candidato';
+import { formatarData } from '../utils/validacao';
 
-export function CandidateListPage() {
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export function PaginaListaCandidatos() {
+  const [candidatos, setCandidatos] = useState<Candidato[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    let active = true;
+    let ativo = true;
 
-    async function load() {
+    async function carregar() {
       try {
-        setLoading(true);
-        setError(null);
-        const data = await listCandidates();
-        if (active) {
-          setCandidates(data);
+        setCarregando(true);
+        setErro(null);
+        const dados = await listarCandidatos();
+        if (ativo) {
+          setCandidatos(dados);
         }
       } catch (err) {
-        if (active) {
-          setError(
+        if (ativo) {
+          setErro(
             err instanceof Error
               ? err.message
               : 'Não foi possível realizar a operação. Tente novamente.',
           );
         }
       } finally {
-        if (active) {
-          setLoading(false);
+        if (ativo) {
+          setCarregando(false);
         }
       }
     }
 
-    void load();
+    void carregar();
     return () => {
-      active = false;
+      ativo = false;
     };
   }, []);
 
@@ -54,11 +54,11 @@ export function CandidateListPage() {
         </Link>
       </div>
 
-      {error && <Alert type="error" message={error} />}
+      {erro && <Alerta tipo="erro" mensagem={erro} />}
 
-      {loading && <p className="muted">Carregando candidatos...</p>}
+      {carregando && <p className="muted">Carregando candidatos...</p>}
 
-      {!loading && !error && candidates.length === 0 && (
+      {!carregando && !erro && candidatos.length === 0 && (
         <div className="empty-state">
           <p>Nenhum candidato cadastrado.</p>
           <Link to="/candidatos/novo" className="btn btn-primary">
@@ -67,7 +67,7 @@ export function CandidateListPage() {
         </div>
       )}
 
-      {!loading && candidates.length > 0 && (
+      {!carregando && candidatos.length > 0 && (
         <div className="table-wrapper">
           <table className="table">
             <thead>
@@ -81,15 +81,15 @@ export function CandidateListPage() {
               </tr>
             </thead>
             <tbody>
-              {candidates.map((candidate) => (
-                <tr key={candidate.id}>
-                  <td>{candidate.nomeCompleto}</td>
-                  <td>{candidate.email}</td>
-                  <td>{candidate.telefone || '—'}</td>
-                  <td>{candidate.areaInteresse || '—'}</td>
-                  <td>{formatDate(candidate.dataCadastro)}</td>
+              {candidatos.map((candidato) => (
+                <tr key={candidato.id}>
+                  <td>{candidato.nomeCompleto}</td>
+                  <td>{candidato.email}</td>
+                  <td>{candidato.telefone || '—'}</td>
+                  <td>{candidato.areaInteresse || '—'}</td>
+                  <td>{formatarData(candidato.dataCadastro)}</td>
                   <td>
-                    <Link to={`/candidatos/${candidate.id}`} className="btn btn-link">
+                    <Link to={`/candidatos/${candidato.id}`} className="btn btn-link">
                       Ver detalhes
                     </Link>
                   </td>

@@ -1,4 +1,4 @@
-# Cadastro de Currículos
+﻿# Cadastro de Currículos
 
 Aplicação full stack para cadastro e consulta de candidatos por uma equipe de recrutamento. O candidato pode ser cadastrado manualmente ou a partir da importação de um currículo em PDF, reutilizando o mesmo formulário e as mesmas regras de validação.
 
@@ -53,7 +53,7 @@ cd backend/CadastroCurriculos.Api
 dotnet ef database update
 ```
 
-Isso cria o banco `CadastroCurriculos` e a tabela `Candidates`.
+Isso cria o banco `CadastroCurriculos` e a tabela `Candidatos`.
 
 ## Executar backend
 
@@ -91,10 +91,10 @@ Os testes cobrem cadastro válido/inválido, candidato inexistente e regras de P
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
-| `POST` | `/api/candidates` | Cadastra um candidato |
-| `GET` | `/api/candidates` | Lista candidatos (mais recente primeiro) |
-| `GET` | `/api/candidates/{id}` | Detalhes de um candidato |
-| `POST` | `/api/candidates/extract-pdf` | Extrai nome, e-mail e telefone de um PDF |
+| `POST` | `/api/candidatos` | Cadastra um candidato |
+| `GET` | `/api/candidatos` | Lista candidatos (mais recente primeiro) |
+| `GET` | `/api/candidatos/{id}` | Detalhes de um candidato |
+| `POST` | `/api/candidatos/extrair-pdf` | Extrai nome, e-mail e telefone de um PDF |
 
 ### Exemplo de cadastro
 
@@ -119,7 +119,7 @@ Os testes cobrem cadastro válido/inválido, candidato inexistente e regras de P
 ## Importação do PDF
 
 1. Em `/candidatos/novo`, o usuário seleciona um PDF.
-2. O frontend envia o arquivo para `POST /api/candidates/extract-pdf`.
+2. O frontend envia o arquivo para `POST /api/candidatos/extrair-pdf`.
 3. O backend extrai o texto com **PdfPig** e tenta identificar nome, e-mail e telefone.
 4. O formulário é preenchido com os dados encontrados.
 5. O usuário pode corrigir/completar e salvar normalmente.

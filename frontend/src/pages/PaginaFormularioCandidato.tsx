@@ -1,13 +1,13 @@
 import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert } from '../components/Alert';
-import { createCandidate, extractPdf } from '../services/api';
-import type { CreateCandidateRequest } from '../types/candidate';
-import { validateCandidateForm, type FormErrors } from '../utils/validation';
+import { Alerta } from '../components/Alerta';
+import { criarCandidato, extrairPdf } from '../services/api';
+import type { RequisicaoCriarCandidato } from '../types/candidato';
+import { validarFormularioCandidato, type ErrosFormulario } from '../utils/validacao';
 
-const MAX_PDF_SIZE = 5 * 1024 * 1024;
-const EMPTY_FORM: CreateCandidateRequest = {
+const TAMANHO_MAXIMO_PDF = 5 * 1024 * 1024;
+const FORMULARIO_VAZIO: RequisicaoCriarCandidato = {
   nomeCompleto: '',
   email: '',
   telefone: '',
@@ -17,39 +17,39 @@ const EMPTY_FORM: CreateCandidateRequest = {
   experienciasProfissionais: '',
 };
 
-export function CandidateFormPage() {
+export function PaginaFormularioCandidato() {
   const navigate = useNavigate();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const referenciaArquivo = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState<CreateCandidateRequest>(EMPTY_FORM);
-  const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
-  const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(
+  const [form, setForm] = useState<RequisicaoCriarCandidato>(FORMULARIO_VAZIO);
+  const [errosCampos, setErrosCampos] = useState<ErrosFormulario>({});
+  const [mensagem, setMensagem] = useState<{ tipo: 'sucesso' | 'erro' | 'info'; texto: string } | null>(
     null,
   );
-  const [saving, setSaving] = useState(false);
-  const [extracting, setExtracting] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+  const [extraindo, setExtraindo] = useState(false);
 
-  function updateField<K extends keyof CreateCandidateRequest>(
+  function atualizarCampo<K extends keyof RequisicaoCriarCandidato>(
     key: K,
-    value: CreateCandidateRequest[K],
+    value: RequisicaoCriarCandidato[K],
   ) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  async function handleSubmit(event: FormEvent) {
+  async function aoEnviar(event: FormEvent) {
     event.preventDefault();
-    setMessage(null);
+    setMensagem(null);
 
-    const errors = validateCandidateForm(form);
-    setFieldErrors(errors);
+    const erros = validarFormularioCandidato(form);
+    setErrosCampos(erros);
 
-    if (Object.keys(errors).length > 0) {
+    if (Object.keys(erros).length > 0) {
       return;
     }
 
     try {
-      setSaving(true);
-      const result = await createCandidate({
+      setSalvando(true);
+      const resultado = await criarCandidato({
         nomeCompleto: form.nomeCompleto.trim(),
         email: form.email.trim(),
         telefone: form.telefone?.trim() || undefined,
@@ -59,89 +59,89 @@ export function CandidateFormPage() {
         experienciasProfissionais: form.experienciasProfissionais?.trim() || undefined,
       });
 
-      setMessage({ type: 'success', text: result.message || 'Candidato cadastrado com sucesso!' });
-      setForm(EMPTY_FORM);
+      setMensagem({ tipo: 'sucesso', texto: resultado.mensagem || 'Candidato cadastrado com sucesso!' });
+      setForm(FORMULARIO_VAZIO);
 
       setTimeout(() => navigate('/candidatos'), 900);
     } catch (error) {
-      setMessage({
-        type: 'error',
-        text:
+      setMensagem({
+        tipo: 'erro',
+        texto:
           error instanceof Error
             ? error.message
             : 'Não foi possível realizar a operação. Tente novamente.',
       });
     } finally {
-      setSaving(false);
+      setSalvando(false);
     }
   }
 
-  async function handlePdfSelected(file: File | null) {
-    setMessage(null);
+  async function aoSelecionarPdf(file: File | null) {
+    setMensagem(null);
 
     if (!file) {
       return;
     }
 
     if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-      setMessage({ type: 'error', text: 'O arquivo selecionado não é um PDF.' });
-      resetFileInput();
+      setMensagem({ tipo: 'erro', texto: 'O arquivo selecionado não é um PDF.' });
+      limparCampoArquivo();
       return;
     }
 
-    if (file.size > MAX_PDF_SIZE) {
-      setMessage({ type: 'error', text: 'O arquivo deve ter no máximo 5 MB.' });
-      resetFileInput();
+    if (file.size > TAMANHO_MAXIMO_PDF) {
+      setMensagem({ tipo: 'erro', texto: 'O arquivo deve ter no máximo 5 MB.' });
+      limparCampoArquivo();
       return;
     }
 
     try {
-      setExtracting(true);
-      const result = await extractPdf(file);
+      setExtraindo(true);
+      const resultado = await extrairPdf(file);
 
-      if (!result.success) {
-        setMessage({
-          type: 'info',
-          text:
-            result.message ||
+      if (!resultado.sucesso) {
+        setMensagem({
+          tipo: 'info',
+          texto:
+            resultado.mensagem ||
             'Não foi possível extrair todas as informações do currículo. Confira e complete os dados manualmente.',
         });
       } else {
         setForm((prev) => ({
           ...prev,
-          nomeCompleto: result.nomeCompleto ?? prev.nomeCompleto,
-          email: result.email ?? prev.email,
-          telefone: result.telefone ?? prev.telefone,
-          formacaoAcademica: result.formacaoAcademica ?? prev.formacaoAcademica,
+          nomeCompleto: resultado.nomeCompleto ?? prev.nomeCompleto,
+          email: resultado.email ?? prev.email,
+          telefone: resultado.telefone ?? prev.telefone,
+          formacaoAcademica: resultado.formacaoAcademica ?? prev.formacaoAcademica,
           experienciasProfissionais:
-            result.experienciasProfissionais ?? prev.experienciasProfissionais,
+            resultado.experienciasProfissionais ?? prev.experienciasProfissionais,
         }));
 
-        const incomplete = !result.nomeCompleto || !result.email || !result.telefone;
-        setMessage({
-          type: incomplete ? 'info' : 'success',
-          text: incomplete
+        const incompleto = !resultado.nomeCompleto || !resultado.email || !resultado.telefone;
+        setMensagem({
+          tipo: incompleto ? 'info' : 'sucesso',
+          texto: incompleto
             ? 'Não foi possível extrair todas as informações do currículo. Confira e complete os dados manualmente.'
-            : result.message,
+            : resultado.mensagem,
         });
       }
     } catch (error) {
-      setMessage({
-        type: 'error',
-        text:
+      setMensagem({
+        tipo: 'erro',
+        texto:
           error instanceof Error
             ? error.message
             : 'Não foi possível realizar a operação. Tente novamente.',
       });
     } finally {
-      setExtracting(false);
-      resetFileInput();
+      setExtraindo(false);
+      limparCampoArquivo();
     }
   }
 
-  function resetFileInput() {
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+  function limparCampoArquivo() {
+    if (referenciaArquivo.current) {
+      referenciaArquivo.current.value = '';
     }
   }
 
@@ -154,7 +154,7 @@ export function CandidateFormPage() {
         </div>
       </div>
 
-      {message && <Alert type={message.type} message={message.text} />}
+      {mensagem && <Alerta tipo={mensagem.tipo} mensagem={mensagem.texto} />}
 
       <div className="panel">
         <div className="pdf-import">
@@ -163,30 +163,30 @@ export function CandidateFormPage() {
             <p>Os campos encontrados serão preenchidos automaticamente no formulário abaixo.</p>
           </div>
           <label className="btn btn-secondary file-button">
-            {extracting ? 'Extraindo...' : 'Selecionar PDF'}
+            {extraindo ? 'Extraindo...' : 'Selecionar PDF'}
             <input
-              ref={fileInputRef}
+              ref={referenciaArquivo}
               type="file"
               accept="application/pdf,.pdf"
               hidden
-              disabled={extracting || saving}
-              onChange={(event) => handlePdfSelected(event.target.files?.[0] ?? null)}
+              disabled={extraindo || salvando}
+              onChange={(event) => aoSelecionarPdf(event.target.files?.[0] ?? null)}
             />
           </label>
         </div>
 
-        <form className="form" onSubmit={handleSubmit} noValidate>
+        <form className="form" onSubmit={aoEnviar} noValidate>
           <div className="form-grid">
             <label className="field">
               <span>Nome completo *</span>
               <input
                 type="text"
                 value={form.nomeCompleto}
-                onChange={(event) => updateField('nomeCompleto', event.target.value)}
+                onChange={(event) => atualizarCampo('nomeCompleto', event.target.value)}
                 placeholder="Ex.: João da Silva"
               />
-              {fieldErrors.nomeCompleto && (
-                <small className="field-error">{fieldErrors.nomeCompleto}</small>
+              {errosCampos.nomeCompleto && (
+                <small className="field-error">{errosCampos.nomeCompleto}</small>
               )}
             </label>
 
@@ -195,10 +195,10 @@ export function CandidateFormPage() {
               <input
                 type="email"
                 value={form.email}
-                onChange={(event) => updateField('email', event.target.value)}
+                onChange={(event) => atualizarCampo('email', event.target.value)}
                 placeholder="Ex.: joao@email.com"
               />
-              {fieldErrors.email && <small className="field-error">{fieldErrors.email}</small>}
+              {errosCampos.email && <small className="field-error">{errosCampos.email}</small>}
             </label>
 
             <label className="field">
@@ -206,7 +206,7 @@ export function CandidateFormPage() {
               <input
                 type="text"
                 value={form.telefone}
-                onChange={(event) => updateField('telefone', event.target.value)}
+                onChange={(event) => atualizarCampo('telefone', event.target.value)}
                 placeholder="Ex.: (41) 99999-9999"
               />
             </label>
@@ -216,7 +216,7 @@ export function CandidateFormPage() {
               <input
                 type="text"
                 value={form.areaInteresse}
-                onChange={(event) => updateField('areaInteresse', event.target.value)}
+                onChange={(event) => atualizarCampo('areaInteresse', event.target.value)}
                 placeholder="Ex.: Desenvolvimento"
               />
             </label>
@@ -227,7 +227,7 @@ export function CandidateFormPage() {
             <textarea
               rows={4}
               value={form.resumoProfissional}
-              onChange={(event) => updateField('resumoProfissional', event.target.value)}
+              onChange={(event) => atualizarCampo('resumoProfissional', event.target.value)}
               placeholder="Breve descrição do perfil do candidato"
             />
           </label>
@@ -237,7 +237,7 @@ export function CandidateFormPage() {
             <textarea
               rows={3}
               value={form.formacaoAcademica}
-              onChange={(event) => updateField('formacaoAcademica', event.target.value)}
+              onChange={(event) => atualizarCampo('formacaoAcademica', event.target.value)}
               placeholder="Ex.: Bacharelado em Ciência da Computação - Universidade XYZ (2020)"
             />
           </label>
@@ -247,7 +247,7 @@ export function CandidateFormPage() {
             <textarea
               rows={5}
               value={form.experienciasProfissionais}
-              onChange={(event) => updateField('experienciasProfissionais', event.target.value)}
+              onChange={(event) => atualizarCampo('experienciasProfissionais', event.target.value)}
               placeholder="Ex.: Desenvolvedora Frontend na Empresa ABC (2021-2024)"
             />
           </label>
@@ -257,12 +257,12 @@ export function CandidateFormPage() {
               type="button"
               className="btn btn-secondary"
               onClick={() => navigate('/candidatos')}
-              disabled={saving}
+              disabled={salvando}
             >
               Cancelar
             </button>
-            <button type="submit" className="btn btn-primary" disabled={saving || extracting}>
-              {saving ? 'Salvando...' : 'Salvar candidato'}
+            <button type="submit" className="btn btn-primary" disabled={salvando || extraindo}>
+              {salvando ? 'Salvando...' : 'Salvar candidato'}
             </button>
           </div>
         </form>

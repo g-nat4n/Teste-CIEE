@@ -6,11 +6,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <header className="app-header">
         <div className="container header-content">
           <Link to="/candidatos" className="brand">
-            <img
-              src="/logo-ciee.png"
-              alt="CIEE Paraná"
-              className="brand-logo"
-            />
+            <img src="/logo-ciee.png" alt="CIEE Paraná" className="brand-logo" />
             <span className="brand-text">
               <strong>Cadastro de Currículos</strong>
               <small>CIEE / Paraná</small>

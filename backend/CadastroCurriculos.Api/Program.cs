@@ -20,24 +20,24 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new()
     {
-        Title = "Cadastro de Currículos API",
+        Title = "API de Cadastro de Currículos",
         Version = "v1",
         Description = "API para cadastro e consulta de candidatos, com suporte à extração de dados de PDFs."
     });
 });
 
-builder.Services.AddDbContext<AppDbContext>(options =>
+builder.Services.AddDbContext<ContextoAplicacao>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddScoped<ICandidateService, CandidateService>();
-builder.Services.AddScoped<IPdfExtractionService, PdfExtractionService>();
+builder.Services.AddScoped<IServicoCandidato, ServicoCandidato>();
+builder.Services.AddScoped<IServicoExtracaoPdf, ServicoExtracaoPdf>();
 
-const string CorsPolicy = "FrontendLocal";
+const string PoliticaCors = "FrontendLocal";
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(CorsPolicy, policy =>
+    options.AddPolicy(PoliticaCors, politica =>
     {
-        policy.WithOrigins("http://localhost:5173")
+        politica.WithOrigins("http://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -51,7 +51,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseCors(CorsPolicy);
+app.UseCors(PoliticaCors);
 
 app.UseAuthorization();
 

@@ -11,9 +11,9 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace CadastroCurriculos.Api.Migrations
 {
-    [DbContext(typeof(AppDbContext))]
-    [Migration("20260929214405_AddCandidateEducationAndExperience")]
-    partial class AddCandidateEducationAndExperience
+    [DbContext(typeof(ContextoAplicacao))]
+    [Migration("20260929221416_CriacaoInicial")]
+    partial class CriacaoInicial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -25,7 +25,7 @@ namespace CadastroCurriculos.Api.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("CadastroCurriculos.Api.Models.Candidate", b =>
+            modelBuilder.Entity("CadastroCurriculos.Api.Models.Candidato", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -70,7 +70,7 @@ namespace CadastroCurriculos.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Candidates", (string)null);
+                    b.ToTable("Candidatos", (string)null);
                 });
 #pragma warning restore 612, 618
         }

@@ -1,61 +1,61 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { Alert } from '../components/Alert';
-import { getCandidate } from '../services/api';
-import type { Candidate } from '../types/candidate';
-import { formatDate } from '../utils/validation';
+import { Alerta } from '../components/Alerta';
+import { obterCandidato } from '../services/api';
+import type { Candidato } from '../types/candidato';
+import { formatarData } from '../utils/validacao';
 
-export function CandidateDetailPage() {
+export function PaginaDetalheCandidato() {
   const { id } = useParams<{ id: string }>();
-  const [candidate, setCandidate] = useState<Candidate | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [candidato, setCandidato] = useState<Candidato | null>(null);
+  const [carregando, setCarregando] = useState(true);
+  const [erro, setErro] = useState<string | null>(null);
 
   useEffect(() => {
-    let active = true;
+    let ativo = true;
 
-    async function load() {
+    async function carregar() {
       if (!id) {
-        setError('Candidato não encontrado.');
-        setLoading(false);
+        setErro('Candidato não encontrado.');
+        setCarregando(false);
         return;
       }
 
       try {
-        setLoading(true);
-        setError(null);
-        const data = await getCandidate(id);
-        if (active) {
-          setCandidate(data);
+        setCarregando(true);
+        setErro(null);
+        const data = await obterCandidato(id);
+        if (ativo) {
+          setCandidato(data);
         }
       } catch (err) {
-        if (active) {
-          setError(
+        if (ativo) {
+          setErro(
             err instanceof Error
               ? err.message
               : 'Não foi possível realizar a operação. Tente novamente.',
           );
         }
       } finally {
-        if (active) {
-          setLoading(false);
+        if (ativo) {
+          setCarregando(false);
         }
       }
     }
 
-    void load();
+    void carregar();
     return () => {
-      active = false;
+      ativo = false;
     };
   }, [id]);
 
-  function handleExportCurriculum() {
-    if (!candidate) {
+  function exportarCurriculo() {
+    if (!candidato) {
       return;
     }
 
     const previousTitle = document.title;
-    document.title = `Curriculo - ${candidate.nomeCompleto}`;
+    document.title = `Currículo - ${candidato.nomeCompleto}`;
     window.print();
     document.title = previousTitle;
   }
@@ -68,8 +68,8 @@ export function CandidateDetailPage() {
           <p>Informações completas do cadastro.</p>
         </div>
         <div className="page-actions">
-          {candidate && (
-            <button type="button" className="btn btn-primary" onClick={handleExportCurriculum}>
+          {candidato && (
+            <button type="button" className="btn btn-primary" onClick={exportarCurriculo}>
               Exportar currículo
             </button>
           )}
@@ -79,22 +79,22 @@ export function CandidateDetailPage() {
         </div>
       </div>
 
-      {loading && <p className="muted no-print">Carregando detalhes...</p>}
-      {error && (
+      {carregando && <p className="muted no-print">Carregando detalhes...</p>}
+      {erro && (
         <div className="no-print">
-          <Alert type="error" message={error} />
+          <Alerta tipo="erro" mensagem={erro} />
         </div>
       )}
 
-      {!loading && candidate && (
+      {!carregando && candidato && (
         <article className="panel detail-panel curriculum-export" id="curriculo-exportavel">
           <header className="curriculum-header">
             <img src="/logo-ciee.png" alt="CIEE Paraná" className="curriculum-logo" />
             <div>
               <p className="curriculum-kicker">Currículo do candidato</p>
-              <h2 className="curriculum-name">{candidate.nomeCompleto}</h2>
+              <h2 className="curriculum-name">{candidato.nomeCompleto}</h2>
               <p className="curriculum-subtitle">
-                {[candidate.areaInteresse, candidate.email, candidate.telefone]
+                {[candidato.areaInteresse, candidato.email, candidato.telefone]
                   .filter(Boolean)
                   .join(' · ') || 'Cadastro CIEE/PR'}
               </p>
@@ -102,18 +102,18 @@ export function CandidateDetailPage() {
           </header>
 
           <div className="detail-meta">
-            <DetailItem label="Nome completo" value={candidate.nomeCompleto} />
-            <DetailItem label="E-mail" value={candidate.email} />
-            <DetailItem label="Telefone" value={candidate.telefone || '—'} />
-            <DetailItem label="Área de interesse" value={candidate.areaInteresse || '—'} />
-            <DetailItem label="Data de cadastro" value={formatDate(candidate.dataCadastro)} />
+            <DetailItem label="Nome completo" value={candidato.nomeCompleto} />
+            <DetailItem label="E-mail" value={candidato.email} />
+            <DetailItem label="Telefone" value={candidato.telefone || '—'} />
+            <DetailItem label="Área de interesse" value={candidato.areaInteresse || '—'} />
+            <DetailItem label="Data de cadastro" value={formatarData(candidato.dataCadastro)} />
           </div>
 
-          <DetailSection title="Resumo profissional" value={candidate.resumoProfissional} />
-          <DetailSection title="Formação acadêmica" value={candidate.formacaoAcademica} />
+          <DetailSection title="Resumo profissional" value={candidato.resumoProfissional} />
+          <DetailSection title="Formação acadêmica" value={candidato.formacaoAcademica} />
           <DetailSection
             title="Experiências profissionais"
-            value={candidate.experienciasProfissionais}
+            value={candidato.experienciasProfissionais}
           />
 
           <p className="curriculum-footer print-only">

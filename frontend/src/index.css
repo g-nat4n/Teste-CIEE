@@ -307,24 +307,24 @@ textarea {
   white-space: nowrap;
 }
 
-.alert {
+.alerta {
   border-radius: 12px;
   padding: 0.9rem 1rem;
   margin-bottom: 1rem;
   font-weight: 500;
 }
 
-.alert-success {
+.alerta-sucesso {
   background: var(--success-bg);
   color: var(--success);
 }
 
-.alert-error {
+.alerta-erro {
   background: var(--danger-bg);
   color: var(--danger);
 }
 
-.alert-info {
+.alerta-info {
   background: var(--info-bg);
   color: var(--info);
 }
