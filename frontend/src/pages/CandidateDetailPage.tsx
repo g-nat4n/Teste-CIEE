@@ -111,7 +111,6 @@ export function CandidateDetailPage() {
 
           <DetailSection title="Resumo profissional" value={candidate.resumoProfissional} />
           <DetailSection title="Formação acadêmica" value={candidate.formacaoAcademica} />
-          <DetailSection title="Cursos" value={candidate.cursos} />
           <DetailSection
             title="Experiências profissionais"
             value={candidate.experienciasProfissionais}

@@ -79,12 +79,6 @@ public class PdfExtractionService : IPdfExtractionService
         "formacao", "formação", "educacao", "educação", "escolaridade"
     ];
 
-    private static readonly string[] CursosHeaders =
-    [
-        "cursos e certificacoes", "cursos e certificações",
-        "cursos", "certificacoes", "certificações"
-    ];
-
     private static readonly string[] ExperienciaHeaders =
     [
         "experiencia profissional", "experiência profissional",
@@ -141,14 +135,12 @@ public class PdfExtractionService : IPdfExtractionService
             var telefone = ExtractPhone(text);
             var nome = ExtractName(text);
             var formacao = ExtractSection(text, FormacaoHeaders);
-            var cursos = ExtractSection(text, CursosHeaders);
             var experiencias = ExtractSection(text, ExperienciaHeaders);
 
             var foundAny = email is not null
                 || telefone is not null
                 || nome is not null
                 || formacao is not null
-                || cursos is not null
                 || experiencias is not null;
 
             return new PdfExtractionResponse
@@ -161,7 +153,7 @@ public class PdfExtractionService : IPdfExtractionService
                 Email = email,
                 Telefone = telefone,
                 FormacaoAcademica = formacao,
-                Cursos = cursos,
+                Cursos = null,
                 ExperienciasProfissionais = experiencias
             };
         }

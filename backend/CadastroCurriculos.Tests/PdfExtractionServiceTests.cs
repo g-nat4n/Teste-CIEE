@@ -32,7 +32,7 @@ public class PdfExtractionServiceTests
     }
 
     [Fact]
-    public async Task ExtractFromPdfAsync_ComSecoes_DeveExtrairFormacaoCursosEExperiencia()
+    public async Task ExtractFromPdfAsync_ComSecoes_DeveExtrairFormacaoEExperiencia()
     {
         var content = """
             Nome: Mariana Oliveira Santos
@@ -41,10 +41,6 @@ public class PdfExtractionServiceTests
 
             Formacao academica:
             Bacharelado em Ciencia da Computacao - UFPR (2018-2022)
-
-            Cursos:
-            React Avancado - Alura (2023)
-            SQL Server - Udemy (2022)
 
             Experiencia profissional:
             Desenvolvedora Frontend - Tech Solutions (2022-2024)
@@ -57,7 +53,6 @@ public class PdfExtractionServiceTests
 
         Assert.True(result.Success);
         Assert.Contains("Ciencia da Computacao", result.FormacaoAcademica);
-        Assert.Contains("React Avancado", result.Cursos);
         Assert.Contains("Tech Solutions", result.ExperienciasProfissionais);
     }
 

@@ -6,7 +6,6 @@ export interface Candidate {
   areaInteresse?: string | null;
   resumoProfissional?: string | null;
   formacaoAcademica?: string | null;
-  cursos?: string | null;
   experienciasProfissionais?: string | null;
   dataCadastro: string;
 }
@@ -18,7 +17,6 @@ export interface CreateCandidateRequest {
   areaInteresse?: string;
   resumoProfissional?: string;
   formacaoAcademica?: string;
-  cursos?: string;
   experienciasProfissionais?: string;
 }
 
@@ -29,7 +27,6 @@ export interface PdfExtractionResult {
   email: string | null;
   telefone: string | null;
   formacaoAcademica: string | null;
-  cursos: string | null;
   experienciasProfissionais: string | null;
 }
 

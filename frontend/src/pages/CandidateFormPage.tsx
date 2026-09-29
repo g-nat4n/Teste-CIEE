@@ -14,7 +14,6 @@ const EMPTY_FORM: CreateCandidateRequest = {
   areaInteresse: '',
   resumoProfissional: '',
   formacaoAcademica: '',
-  cursos: '',
   experienciasProfissionais: '',
 };
 
@@ -57,7 +56,6 @@ export function CandidateFormPage() {
         areaInteresse: form.areaInteresse?.trim() || undefined,
         resumoProfissional: form.resumoProfissional?.trim() || undefined,
         formacaoAcademica: form.formacaoAcademica?.trim() || undefined,
-        cursos: form.cursos?.trim() || undefined,
         experienciasProfissionais: form.experienciasProfissionais?.trim() || undefined,
       });
 
@@ -115,7 +113,6 @@ export function CandidateFormPage() {
           email: result.email ?? prev.email,
           telefone: result.telefone ?? prev.telefone,
           formacaoAcademica: result.formacaoAcademica ?? prev.formacaoAcademica,
-          cursos: result.cursos ?? prev.cursos,
           experienciasProfissionais:
             result.experienciasProfissionais ?? prev.experienciasProfissionais,
         }));
@@ -242,16 +239,6 @@ export function CandidateFormPage() {
               value={form.formacaoAcademica}
               onChange={(event) => updateField('formacaoAcademica', event.target.value)}
               placeholder="Ex.: Bacharelado em Ciência da Computação - Universidade XYZ (2020)"
-            />
-          </label>
-
-          <label className="field">
-            <span>Cursos</span>
-            <textarea
-              rows={3}
-              value={form.cursos}
-              onChange={(event) => updateField('cursos', event.target.value)}
-              placeholder="Ex.: React Avançado, SQL Server, Certificação AWS"
             />
           </label>
 
