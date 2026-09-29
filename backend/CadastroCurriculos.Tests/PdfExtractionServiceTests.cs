@@ -53,7 +53,41 @@ public class PdfExtractionServiceTests
 
         Assert.True(result.Success);
         Assert.Contains("Ciencia da Computacao", result.FormacaoAcademica);
+        Assert.DoesNotContain("Tech Solutions", result.FormacaoAcademica);
         Assert.Contains("Tech Solutions", result.ExperienciasProfissionais);
+    }
+
+    [Fact]
+    public async Task ExtractFromPdfAsync_Formacao_NaoDeveIncluirHabilidadesOuProjetos()
+    {
+        var content = """
+            Nome: Gustavo Natan
+            E-mail: gustavo@email.com
+            Telefone: (41) 98888-7777
+
+            Formacao academica:
+            Analise e Desenvolvimento de Sistemas - Universidade Positivo (2024-2026)
+            Design Grafico - Universidade Positivo (2021-2023)
+
+            Habilidades Tecnicas
+            Linguagens: Java, HTML, CSS, JavaScript, Python
+            Frameworks: Spring Boot, React
+
+            Projetos
+            Sistema de cadastro de curriculos
+            """;
+
+        var file = CreatePdfFormFile(content, "curriculo-formacao.pdf");
+
+        var result = await _service.ExtractFromPdfAsync(file);
+
+        Assert.True(result.Success);
+        Assert.Contains("Universidade Positivo", result.FormacaoAcademica);
+        Assert.Contains("Design Grafico", result.FormacaoAcademica);
+        Assert.DoesNotContain("Habilidades", result.FormacaoAcademica);
+        Assert.DoesNotContain("Java", result.FormacaoAcademica);
+        Assert.DoesNotContain("Projetos", result.FormacaoAcademica);
+        Assert.DoesNotContain("Spring Boot", result.FormacaoAcademica);
     }
 
     [Fact]

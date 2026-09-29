@@ -37,12 +37,11 @@ public class PdfExtractionService : IPdfExtractionService
         "pessoais", "sobre", "mim", "cursos", "certificacoes", "certificações"
     };
 
-    // Cabeçalhos conhecidos de seções de currículo (ordem não importa)
+    // Cabeçalhos conhecidos usados para delimitar o fim de uma seção
     private static readonly string[] SectionHeaders =
     [
         "formacao academica",
         "formação acadêmica",
-        "formacao academica",
         "formação academica",
         "formacao",
         "formação",
@@ -51,6 +50,7 @@ public class PdfExtractionService : IPdfExtractionService
         "escolaridade",
         "cursos e certificacoes",
         "cursos e certificações",
+        "cursos complementares",
         "cursos",
         "certificacoes",
         "certificações",
@@ -64,26 +64,52 @@ public class PdfExtractionService : IPdfExtractionService
         "histórico profissional",
         "resumo profissional",
         "resumo",
+        "objetivo profissional",
         "objetivo",
+        "habilidades tecnicas",
+        "habilidades técnicas",
         "habilidades",
+        "competencias tecnicas",
+        "competências técnicas",
+        "competencias",
+        "competências",
         "idiomas",
+        "projetos",
         "dados pessoais",
+        "informacoes pessoais",
+        "informações pessoais",
         "contato",
+        "sobre mim",
+        "perfil profissional",
+        "perfil",
+        "tecnologias",
+        "ferramentas",
+        "linguagens",
+        "frameworks",
+        "publicacoes",
+        "publicações",
+        "voluntariado",
+        "premios",
+        "prêmios",
+        "area de interesse",
+        "área de interesse",
         "area",
         "área"
     ];
 
+    // Preferir títulos longos para evitar capturar linhas erradas
     private static readonly string[] FormacaoHeaders =
     [
         "formacao academica", "formação acadêmica", "formação academica",
-        "formacao", "formação", "educacao", "educação", "escolaridade"
+        "escolaridade", "educacao", "educação", "formacao", "formação"
     ];
 
     private static readonly string[] ExperienciaHeaders =
     [
         "experiencia profissional", "experiência profissional",
         "experiencias profissionais", "experiências profissionais",
-        "experiencia", "experiência", "historico profissional", "histórico profissional"
+        "historico profissional", "histórico profissional",
+        "experiencia", "experiência"
     ];
 
     public async Task<PdfExtractionResponse> ExtractFromPdfAsync(IFormFile file)
@@ -276,59 +302,26 @@ public class PdfExtractionService : IPdfExtractionService
 
         for (var i = 0; i < lines.Count; i++)
         {
-            var normalized = NormalizeHeader(lines[i]);
-            if (string.IsNullOrWhiteSpace(normalized))
+            if (!TryMatchHeader(lines[i], targetHeaders, out var header))
             {
                 continue;
             }
 
-            foreach (var header in targetHeaders.OrderByDescending(h => h.Length))
-            {
-                var normalizedHeader = NormalizeHeader(header);
-                if (normalized == normalizedHeader ||
-                    normalized.StartsWith(normalizedHeader + " ", StringComparison.Ordinal) ||
-                    normalized.StartsWith(normalizedHeader + ":", StringComparison.Ordinal))
-                {
-                    startIndex = i;
-                    matchedHeader = header;
-                    break;
-                }
-            }
-
-            if (startIndex >= 0)
-            {
-                break;
-            }
+            startIndex = i;
+            matchedHeader = header;
+            break;
         }
 
-        if (startIndex < 0)
+        if (startIndex < 0 || matchedHeader is null)
         {
             return null;
         }
 
         var content = new List<string>();
-        var firstLine = lines[startIndex].Trim().TrimEnd(':', '-', '|', '•', '*').Trim();
-
-        // Se a linha do cabeçalho já trouxe conteúdo (ex.: "Cursos: React, Node")
-        if (!string.IsNullOrWhiteSpace(firstLine) &&
-            NormalizeHeader(firstLine) != NormalizeHeader(matchedHeader!))
+        var firstLine = StripHeaderPrefix(lines[startIndex], targetHeaders);
+        if (!string.IsNullOrWhiteSpace(firstLine))
         {
-            // Remove o prefixo do cabeçalho quando estiver na mesma linha
-            foreach (var header in targetHeaders.OrderByDescending(h => h.Length))
-            {
-                var pattern = "^" + Regex.Escape(header) + @"\s*[:\-]?\s*";
-                var stripped = Regex.Replace(firstLine, pattern, string.Empty, RegexOptions.IgnoreCase).Trim();
-                if (stripped.Length < firstLine.Length)
-                {
-                    firstLine = stripped;
-                    break;
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(firstLine))
-            {
-                content.Add(firstLine);
-            }
+            content.Add(firstLine);
         }
 
         for (var i = startIndex + 1; i < lines.Count; i++)
@@ -336,14 +329,16 @@ public class PdfExtractionService : IPdfExtractionService
             var line = lines[i];
             if (string.IsNullOrWhiteSpace(line))
             {
-                if (content.Count > 0)
-                {
-                    content.Add(string.Empty);
-                }
                 continue;
             }
 
             if (IsSectionHeader(line))
+            {
+                break;
+            }
+
+            // Linhas que claramente não pertencem à formação (quando extraindo formação)
+            if (IsFormacaoHeaderSet(targetHeaders) && LooksLikeNonEducationContent(line))
             {
                 break;
             }
@@ -358,20 +353,136 @@ public class PdfExtractionService : IPdfExtractionService
         return string.IsNullOrWhiteSpace(result) ? null : result;
     }
 
-    private static bool IsSectionHeader(string line)
+    private static bool IsFormacaoHeaderSet(IReadOnlyList<string> targetHeaders)
+    {
+        return targetHeaders.Any(h =>
+            NormalizeHeader(h).Contains("formacao", StringComparison.Ordinal) ||
+            NormalizeHeader(h).Contains("educacao", StringComparison.Ordinal) ||
+            NormalizeHeader(h).Contains("escolaridade", StringComparison.Ordinal));
+    }
+
+    /// <summary>
+    /// Interrompe a formação quando o texto já parece outra seção
+    /// (habilidades, stacks, projetos etc.), mesmo sem cabeçalho explícito.
+    /// </summary>
+    private static bool LooksLikeNonEducationContent(string line)
     {
         var normalized = NormalizeHeader(line);
-        if (string.IsNullOrWhiteSpace(normalized) || normalized.Length > 60)
+
+        // Se parece formação acadêmica, mantém
+        if (Regex.IsMatch(
+                normalized,
+                @"\b(bacharel|licenciatura|tecnologo|tecnologo|mestrado|doutorado|graduacao|graduacao|ensino medio|ensino medio|universidade|faculdade|centro universitario|curso superior|pos graduacao|pos-graduacao)\b"))
         {
             return false;
         }
 
-        return SectionHeaders.Any(header =>
+        string[] sectionLikeMarkers =
+        [
+            "habilidades", "competencias", "competencias", "linguagens", "frameworks",
+            "banco de dados", "ferramentas", "tecnologias", "projetos", "soft skills",
+            "experiencia profissional", "experiencias profissionais"
+        ];
+
+        if (sectionLikeMarkers.Any(marker =>
+                normalized == NormalizeHeader(marker) ||
+                normalized.StartsWith(NormalizeHeader(marker) + ":", StringComparison.Ordinal) ||
+                normalized.StartsWith(NormalizeHeader(marker) + " ", StringComparison.Ordinal)))
+        {
+            return true;
+        }
+
+        // Linha tipicamente de stack técnica: "Java, HTML, CSS, JavaScript"
+        if (Regex.IsMatch(normalized, @"^(java|html|css|javascript|typescript|python|react|node|sql)(\s*,\s*[a-z0-9.+#/ -]+){2,}$"))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    private static bool TryMatchHeader(string line, IReadOnlyList<string> headers, out string matchedHeader)
+    {
+        matchedHeader = string.Empty;
+        var normalized = NormalizeHeader(line);
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return false;
+        }
+
+        foreach (var header in headers.OrderByDescending(h => NormalizeHeader(h).Length))
         {
             var normalizedHeader = NormalizeHeader(header);
-            return normalized == normalizedHeader ||
-                   normalized.StartsWith(normalizedHeader + ":", StringComparison.Ordinal);
-        });
+            if (normalized == normalizedHeader ||
+                normalized.StartsWith(normalizedHeader + ":", StringComparison.Ordinal) ||
+                normalized.StartsWith(normalizedHeader + " -", StringComparison.Ordinal) ||
+                normalized.StartsWith(normalizedHeader + " ", StringComparison.Ordinal))
+            {
+                // Evita casar "formacao" dentro de frases longas de conteúdo
+                var remainder = normalized[normalizedHeader.Length..].TrimStart(' ', ':', '-');
+                if (remainder.Length > 45)
+                {
+                    continue;
+                }
+
+                matchedHeader = header;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static string StripHeaderPrefix(string line, IReadOnlyList<string> headers)
+    {
+        var working = line.Trim().TrimEnd(':', '-', '|', '•', '*').Trim();
+        foreach (var header in headers.OrderByDescending(h => h.Length))
+        {
+            var pattern = "^" + Regex.Escape(header) + @"\s*[:\-]?\s*";
+            var stripped = Regex.Replace(working, pattern, string.Empty, RegexOptions.IgnoreCase).Trim();
+            if (stripped.Length < working.Length)
+            {
+                return stripped;
+            }
+        }
+
+        // Se a linha inteira é só o título da seção, não há conteúdo nela
+        return TryMatchHeader(working, headers, out _) &&
+               NormalizeHeader(working).Split(' ', StringSplitOptions.RemoveEmptyEntries).Length <= 3
+            ? string.Empty
+            : working;
+    }
+
+    private static bool IsSectionHeader(string line)
+    {
+        var normalized = NormalizeHeader(line);
+        if (string.IsNullOrWhiteSpace(normalized) || normalized.Length > 55)
+        {
+            return false;
+        }
+
+        var wordCount = normalized.Split(' ', StringSplitOptions.RemoveEmptyEntries).Length;
+        if (wordCount > 5)
+        {
+            return false;
+        }
+
+        // Conteúdo típico de item (com datas longas + instituição) não é cabeçalho
+        if (wordCount >= 4 && Regex.IsMatch(line, @"\d{4}"))
+        {
+            return false;
+        }
+
+        return SectionHeaders
+            .OrderByDescending(h => NormalizeHeader(h).Length)
+            .Any(header =>
+            {
+                var normalizedHeader = NormalizeHeader(header);
+                return normalized == normalizedHeader ||
+                       normalized.StartsWith(normalizedHeader + ":", StringComparison.Ordinal) ||
+                       normalized.StartsWith(normalizedHeader + " -", StringComparison.Ordinal) ||
+                       normalized.StartsWith(normalizedHeader + " ", StringComparison.Ordinal);
+            });
     }
 
     private static string NormalizeHeader(string value)
