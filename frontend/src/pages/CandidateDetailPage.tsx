@@ -138,7 +138,21 @@ function DetailSection({ title, value }: { title: string; value?: string | null 
   return (
     <section className="detail-section">
       <h2 className="detail-section-title">{title}</h2>
-      <p className="detail-section-body">{value?.trim() || '—'}</p>
+      <p className="detail-section-body">{formatCurriculumText(value)}</p>
     </section>
   );
+}
+
+/** Remove linhas em branco extras para o currículo ficar compacto na tela e no PDF. */
+function formatCurriculumText(value?: string | null): string {
+  if (!value?.trim()) {
+    return '—';
+  }
+
+  return value
+    .replace(/\r\n/g, '\n')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .join('\n');
 }
