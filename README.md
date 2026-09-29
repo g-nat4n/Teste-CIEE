@@ -1,42 +1,74 @@
-﻿# Cadastro de Currículos
+﻿# Cadastro de Currículos — CIEE/PR
 
-Aplicação full stack para cadastro e consulta de candidatos por uma equipe de recrutamento. O candidato pode ser cadastrado manualmente ou a partir da importação de um currículo em PDF, reutilizando o mesmo formulário e as mesmas regras de validação.
+Aplicação full stack para a equipe de recrutamento cadastrar e consultar candidatos.
 
-## Tecnologias
+Há **duas formas de cadastro**, usando o **mesmo formulário** e as **mesmas regras de validação**:
+
+1. **Manual** — preenchimento direto dos campos e salvamento.
+2. **Com PDF** — envio de um currículo; o backend extrai o texto, tenta identificar dados e preenche o formulário para revisão antes de salvar.
+
+O PDF é **opcional**. Se o arquivo não for enviado ou a leitura falhar, o cadastro manual continua disponível.
+
+---
+
+## Tecnologias e versões
 
 | Camada | Tecnologia | Versão |
 |--------|------------|--------|
-| Frontend | React | 19.x |
-| Frontend | TypeScript | 5.x |
-| Frontend | Vite | 8.x |
-| Frontend | React Router | 7.x |
+| Frontend | React | 19.2.x |
+| Frontend | TypeScript | 6.x |
+| Frontend | Vite | 8.3.x |
+| Frontend | React Router DOM | 7.x |
 | Backend | ASP.NET Core Web API | .NET 8 |
 | Backend | C# | 12 |
-| Banco | SQL Server (LocalDB/Express) | — |
+| Banco de dados | SQL Server (LocalDB / Express) | — |
 | ORM | Entity Framework Core | 8.0.11 |
-| PDF | UglyToad.PdfPig | 1.7.0-custom-5 |
+| Extração de PDF | UglyToad.PdfPig | 1.7.0-custom-5 |
+| Documentação da API | Swashbuckle (Swagger) | 6.6.2 |
 | Testes | xUnit | 2.x |
+
+---
 
 ## Pré-requisitos
 
-- [Node.js](https://nodejs.org/) 18+ (recomendado 20+)
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- Node.js 18+ (recomendado 20+)
+- .NET 8 SDK
 - SQL Server (LocalDB, Express ou instância completa)
 - Git
-- Ferramenta EF: `dotnet tool install --global dotnet-ef`
+- Ferramenta EF Core: `dotnet tool install --global dotnet-ef`
 
-## Configuração do banco
+---
 
-1. Garanta que o SQL Server / LocalDB esteja em execução.
-   - LocalDB: `sqllocaldb start MSSQLLocalDB`
-2. Copie o arquivo de exemplo de configuração:
+## Dados do candidato
+
+| Campo | Obrigatório | Observação |
+|-------|-------------|------------|
+| Nome completo | Sim | — |
+| E-mail | Sim | Formato válido |
+| Telefone | Não | — |
+| Área / cargo de interesse | Não | — |
+| Resumo profissional | Não | — |
+| Formação acadêmica | Não | Extra além do enunciado mínimo |
+| Experiências profissionais | Não | Extra além do enunciado mínimo |
+
+---
+
+## Configuração do banco de dados
+
+1. Inicie o SQL Server / LocalDB:
+
+```bash
+sqllocaldb start MSSQLLocalDB
+```
+
+2. Copie o arquivo de exemplo (sem credenciais reais no repositório):
 
 ```bash
 cd backend/CadastroCurriculos.Api
 copy appsettings.example.json appsettings.json
 ```
 
-3. Ajuste a connection string em `appsettings.json` se necessário:
+3. Ajuste a connection string, se necessário:
 
 ```json
 {
@@ -55,19 +87,22 @@ dotnet ef database update
 
 Isso cria o banco `CadastroCurriculos` e a tabela `Candidatos`.
 
-## Executar backend
+---
+
+## Executar o backend
 
 ```bash
 cd backend/CadastroCurriculos.Api
 dotnet run --urls http://localhost:5052
 ```
 
-- API: http://localhost:5052
-- Swagger: http://localhost:5052/swagger
+- API: http://localhost:5052  
+- Swagger: http://localhost:5052/swagger  
+- CORS liberado para: `http://localhost:5173`
 
-CORS está liberado para `http://localhost:5173`.
+---
 
-## Executar frontend
+## Executar o frontend
 
 ```bash
 cd frontend
@@ -78,23 +113,26 @@ npm run dev
 
 Acesse: http://localhost:5173
 
-## Testes
+---
 
-```bash
-cd backend
-dotnet test
-```
+## Telas
 
-Os testes cobrem cadastro válido/inválido, candidato inexistente e regras de PDF (formato, tamanho, ausência de campos e falha de extração).
+| Rota | Descrição |
+|------|-----------|
+| `/candidatos` | Listagem de candidatos |
+| `/candidatos/novo` | Cadastro manual e importação de PDF |
+| `/candidatos/:id` | Detalhes + exportação do currículo |
 
-## Endpoints
+---
+
+## Endpoints da API
 
 | Método | Rota | Descrição |
 |--------|------|-----------|
 | `POST` | `/api/candidatos` | Cadastra um candidato |
 | `GET` | `/api/candidatos` | Lista candidatos (mais recente primeiro) |
 | `GET` | `/api/candidatos/{id}` | Detalhes de um candidato |
-| `POST` | `/api/candidatos/extrair-pdf` | Extrai nome, e-mail e telefone de um PDF |
+| `POST` | `/api/candidatos/extrair-pdf` | Extrai dados de um currículo PDF |
 
 ### Exemplo de cadastro
 
@@ -104,44 +142,73 @@ Os testes cobrem cadastro válido/inválido, candidato inexistente e regras de P
   "email": "joao@email.com",
   "telefone": "(41) 99999-9999",
   "areaInteresse": "Desenvolvimento",
-  "resumoProfissional": "Desenvolvedor com experiência em Java e React."
+  "resumoProfissional": "Desenvolvedor com experiência em Java e React.",
+  "formacaoAcademica": "Bacharelado em Ciência da Computação - UFPR (2018-2022)",
+  "experienciasProfissionais": "Desenvolvedor Frontend - Empresa X (2022-2024)"
 }
 ```
 
-### Extração de PDF
+### Extração de PDF (`multipart/form-data`)
 
-- Campo multipart: `file`
+- Campo do arquivo: `file`
 - Apenas PDF
-- Máximo 5 MB
+- Tamanho máximo: **5 MB**
 - Arquivo não pode estar vazio
-- Além da extensão, o backend valida a assinatura `%PDF`
+- Validação da assinatura `%PDF` (não confia só na extensão)
 
-## Importação do PDF
+O backend tenta identificar:
+
+- Nome completo  
+- E-mail  
+- Telefone  
+- Formação acadêmica  
+- Experiências profissionais  
+
+Quando um campo não for encontrado, retorna `null` e o formulário permite preenchimento manual.
+
+---
+
+## Fluxo de importação do PDF
 
 1. Em `/candidatos/novo`, o usuário seleciona um PDF.
 2. O frontend envia o arquivo para `POST /api/candidatos/extrair-pdf`.
-3. O backend extrai o texto com **PdfPig** e tenta identificar nome, e-mail e telefone.
-4. O formulário é preenchido com os dados encontrados.
-5. O usuário pode corrigir/completar e salvar normalmente.
+3. O backend lê o texto com **PdfPig**.
+4. Heurísticas/regex tentam identificar os campos.
+5. O formulário é preenchido com o que foi encontrado.
+6. O usuário revisa, completa e salva.
 
-A falha na leitura do PDF **não impede** o cadastro manual.
-
-### Estratégia de identificação do nome
+### Como o nome é identificado
 
 1. Procura linhas com rótulos como `Nome:` ou `Nome completo:`.
-2. Caso contrário, analisa as primeiras linhas e escolhe a primeira que parece um nome próprio (duas ou mais palavras capitalizadas, sem e-mail/telefone/rótulos comuns de currículo).
+2. Se não houver rótulo, analisa as primeiras linhas e escolhe a primeira que parece nome próprio (duas ou mais palavras capitalizadas, sem e-mail/telefone/títulos de seção).
 
-## Telas
+### Como a formação é delimitada
 
-| Rota | Tela |
-|------|------|
-| `/candidatos` | Listagem |
-| `/candidatos/novo` | Cadastro (manual + PDF) |
-| `/candidatos/:id` | Detalhes |
+A extração começa em títulos como `Formação acadêmica` / `Educação` e **para** ao encontrar outra seção (Cursos, Experiência, Habilidades, Projetos etc.), para não misturar dados.
+
+---
+
+## Testes
+
+```bash
+cd backend
+dotnet test
+```
+
+Os testes cobrem:
+
+- Cadastro válido  
+- Nome obrigatório  
+- E-mail obrigatório / inválido  
+- Candidato inexistente  
+- PDF válido, inválido, acima de 5 MB  
+- PDF sem e-mail / sem telefone  
+- Falha de extração  
+- Formação sem incluir habilidades/projetos  
+
+---
 
 ## PDF fictício para teste
-
-Arquivo disponível em:
 
 ```text
 docs/curriculo-ficticio.pdf
@@ -149,17 +216,13 @@ docs/curriculo-ficticio.pdf
 
 Dados fictícios:
 
-- Nome: Mariana Oliveira Santos
-- E-mail: mariana.santos@email.com
-- Telefone: (41) 99999-8888
-- Área: Desenvolvimento de Software
+- Nome: Mariana Oliveira Santos  
+- E-mail: mariana.santos@email.com  
+- Telefone: (41) 99999-8888  
+- Área: Desenvolvimento de Software  
+- Formação e experiências de exemplo  
 
-## Limitações
-
-- A extração depende da estrutura do currículo (PDF com texto selecionável).
-- Currículos escaneados (somente imagem) não terão texto extraído.
-- Nome, telefone ou e-mail podem não ser identificados corretamente em layouts atípicos.
-- Não há autenticação (fora do escopo do desafio).
+---
 
 ## Estrutura do projeto
 
@@ -167,11 +230,11 @@ Dados fictícios:
 /
 ├── backend/
 │   ├── CadastroCurriculos.Api/
-│   │   ├── Controllers/
-│   │   ├── Data/
+│   │   ├── Controllers/          # CandidatosController
+│   │   ├── Data/                 # ContextoAplicacao
 │   │   ├── DTOs/
-│   │   ├── Models/
-│   │   ├── Services/
+│   │   ├── Models/               # Candidato
+│   │   ├── Services/             # ServicoCandidato, ServicoExtracaoPdf
 │   │   ├── Validators/
 │   │   ├── Migrations/
 │   │   ├── Program.cs
@@ -179,9 +242,9 @@ Dados fictícios:
 │   └── CadastroCurriculos.Tests/
 ├── frontend/
 │   └── src/
-│       ├── components/
-│       ├── pages/
-│       ├── services/
+│       ├── components/           # Layout, Alerta
+│       ├── pages/                # Lista, formulário, detalhes
+│       ├── services/             # Chamadas à API
 │       ├── types/
 │       ├── utils/
 │       └── App.tsx
@@ -191,8 +254,19 @@ Dados fictícios:
 └── DESENVOLVIMENTO.md
 ```
 
+---
+
+## Limitações
+
+- A extração depende de PDF com **texto selecionável**.
+- Currículos **escaneados** (somente imagem) não funcionam bem sem OCR.
+- Layouts muito diferentes podem impedir a identificação correta de nome, telefone, formação ou experiências.
+- Não há autenticação/login (fora do escopo do desafio).
+
+---
+
 ## Segurança
 
 - `appsettings.json` e `.env` estão no `.gitignore`
-- Use sempre `appsettings.example.json` / `.env.example` como referência
+- Use `appsettings.example.json` e `.env.example` como referência
 - Não versionar senhas ou connection strings com credenciais reais
