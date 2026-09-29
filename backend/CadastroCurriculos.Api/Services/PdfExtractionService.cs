@@ -262,6 +262,9 @@ public class PdfExtractionService : IPdfExtractionService
             "\n",
             RegexOptions.IgnoreCase);
 
+        // Remove escapes literais que alguns PDFs devolvem no texto
+        text = text.Replace("\\(", "(").Replace("\\)", ")").Replace("\\\\", "\\");
+
         return text;
     }
 
