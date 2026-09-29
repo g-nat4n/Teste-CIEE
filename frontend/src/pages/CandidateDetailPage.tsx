@@ -49,23 +49,58 @@ export function CandidateDetailPage() {
     };
   }, [id]);
 
+  function handleExportCurriculum() {
+    if (!candidate) {
+      return;
+    }
+
+    const previousTitle = document.title;
+    document.title = `Curriculo - ${candidate.nomeCompleto}`;
+    window.print();
+    document.title = previousTitle;
+  }
+
   return (
     <section className="page">
-      <div className="page-header">
+      <div className="page-header no-print">
         <div>
           <h1>Detalhes do candidato</h1>
           <p>Informações completas do cadastro.</p>
         </div>
-        <Link to="/candidatos" className="btn btn-secondary">
-          Voltar para a listagem
-        </Link>
+        <div className="page-actions">
+          {candidate && (
+            <button type="button" className="btn btn-primary" onClick={handleExportCurriculum}>
+              Exportar currículo
+            </button>
+          )}
+          <Link to="/candidatos" className="btn btn-secondary">
+            Voltar para a listagem
+          </Link>
+        </div>
       </div>
 
-      {loading && <p className="muted">Carregando detalhes...</p>}
-      {error && <Alert type="error" message={error} />}
+      {loading && <p className="muted no-print">Carregando detalhes...</p>}
+      {error && (
+        <div className="no-print">
+          <Alert type="error" message={error} />
+        </div>
+      )}
 
       {!loading && candidate && (
-        <div className="panel detail-panel">
+        <article className="panel detail-panel curriculum-export" id="curriculo-exportavel">
+          <header className="curriculum-header">
+            <img src="/logo-ciee.png" alt="CIEE Paraná" className="curriculum-logo" />
+            <div>
+              <p className="curriculum-kicker">Currículo do candidato</p>
+              <h2 className="curriculum-name">{candidate.nomeCompleto}</h2>
+              <p className="curriculum-subtitle">
+                {[candidate.areaInteresse, candidate.email, candidate.telefone]
+                  .filter(Boolean)
+                  .join(' · ') || 'Cadastro CIEE/PR'}
+              </p>
+            </div>
+          </header>
+
           <div className="detail-meta">
             <DetailItem label="Nome completo" value={candidate.nomeCompleto} />
             <DetailItem label="E-mail" value={candidate.email} />
@@ -81,7 +116,11 @@ export function CandidateDetailPage() {
             title="Experiências profissionais"
             value={candidate.experienciasProfissionais}
           />
-        </div>
+
+          <p className="curriculum-footer print-only">
+            Documento gerado pelo Cadastro de Currículos — CIEE/PR
+          </p>
+        </article>
       )}
     </section>
   );
