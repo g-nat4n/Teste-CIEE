@@ -4,10 +4,16 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.WebHost.ConfigureKestrel(options =>
+{
+    // Um pouco acima de 5 MB para o multipart; a regra de negócio valida 5 MB no serviço
+    options.Limits.MaxRequestBodySize = 6 * 1024 * 1024;
+});
+
 builder.Services.AddControllers();
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = PdfExtractionService.MaxFileSizeBytes;
+    options.MultipartBodyLengthLimit = 6 * 1024 * 1024;
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

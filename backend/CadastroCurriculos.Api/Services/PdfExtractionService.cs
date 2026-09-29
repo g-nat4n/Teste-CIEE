@@ -19,7 +19,7 @@ public class PdfExtractionService : IPdfExtractionService
     public const long MaxFileSizeBytes = 5 * 1024 * 1024; // 5 MB
 
     private static readonly Regex EmailRegex = new(
-        @"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}",
+        @"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,6}(?![a-zA-Z0-9])",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     // Aceita: (41) 99999-9999 | 41 99999-9999 | 41999999999 | (41) 9999-9999
@@ -154,10 +154,43 @@ public class PdfExtractionService : IPdfExtractionService
         using var document = PdfDocument.Open(stream);
         foreach (var page in document.GetPages())
         {
-            builder.AppendLine(page.Text);
+            var words = page.GetWords().ToList();
+            if (words.Count == 0)
+            {
+                builder.AppendLine(page.Text);
+                continue;
+            }
+
+            double? previousBottom = null;
+            foreach (var word in words)
+            {
+                var bottom = word.BoundingBox.Bottom;
+                if (previousBottom is not null && Math.Abs(previousBottom.Value - bottom) > 2)
+                {
+                    builder.AppendLine();
+                }
+                else if (builder.Length > 0 && !builder.ToString().EndsWith('\n') && !char.IsWhiteSpace(builder[^1]))
+                {
+                    builder.Append(' ');
+                }
+
+                builder.Append(word.Text);
+                previousBottom = bottom;
+            }
+
+            builder.AppendLine();
         }
 
-        return builder.ToString();
+        var text = builder.ToString();
+
+        // Separa rótulos colados sem espaço (ex.: email.comTelefone:)
+        text = Regex.Replace(
+            text,
+            @"(?<=\S)(?=(?:Telefone|E-mail|Email|Nome|Celular|Area|Área)\s*:)",
+            "\n",
+            RegexOptions.IgnoreCase);
+
+        return text;
     }
 
     private static string? ExtractEmail(string text)

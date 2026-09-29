@@ -78,7 +78,7 @@ public class CandidatesController : ControllerBase
     /// Extrai nome, e-mail e telefone de um currículo em PDF.
     /// </summary>
     [HttpPost("extract-pdf")]
-    [RequestSizeLimit(PdfExtractionService.MaxFileSizeBytes)]
+    [RequestSizeLimit(6 * 1024 * 1024)]
     [ProducesResponseType(typeof(PdfExtractionResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(MessageResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ExtractPdf(IFormFile file)
