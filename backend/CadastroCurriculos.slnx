@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="CadastroCurriculos.Api/CadastroCurriculos.Api.csproj" />
+  <Project Path="CadastroCurriculos.Tests/CadastroCurriculos.Tests.csproj" />
+</Solution>
